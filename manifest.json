@@ -2,7 +2,7 @@
   "name": "元UP能耗记录",
   "short_name": "元UP",
   "description": "比亚迪元UP 电动车能耗记录工具",
-  "start_url": "./index.html",
+  "start_url": "./元UP能耗记录.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
