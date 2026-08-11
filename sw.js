@@ -1,8 +1,8 @@
 // Service Worker for 元UP PWA
-const CACHE_NAME = 'yuanup-v2';
+const CACHE_NAME = 'yuanup-v1';
 const ASSETS = [
   './',
-  './index.html',
+  './元UP能耗记录.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
@@ -56,5 +56,5 @@ self.addEventListener('push', (e) => {
 
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
-  e.waitUntil(clients.openWindow('./index.html'));
+  e.waitUntil(clients.openWindow('./元UP能耗记录.html'));
 });

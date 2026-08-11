@@ -585,6 +585,16 @@
   <div class="panel" id="panel-stats">
     <div class="card" id="today-card"></div>
 
+    <div class="card">
+      <div class="card-title">
+        <span>📅 月报</span>
+        <select id="stats-month-filter" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit">
+          <option value="all">📊 全部时间(累计)</option>
+        </select>
+      </div>
+      <div id="month-report"></div>
+    </div>
+
     <div class="stats-grid" id="stats-grid"></div>
 
     <div class="card insight-card" id="ac-insight"></div>
@@ -1652,9 +1662,13 @@ function renderStats() {
   const cap = s.batteryCapacity || 45.12;
   const range = s.ratedRange || 401;
 
-  // 总体统计
-  const totalKwh = drives.reduce((sum, r) => sum + (r.startSoc - r.endSoc) / 100 * cap, 0);
-  const totalKm = drives.reduce((sum, r) => sum + (r.endMileage && r.startMileage ? r.endMileage - r.startMileage : 0), 0);
+  // 月份筛选
+  const monthFilter = document.getElementById('stats-month-filter').value;
+  const filteredDrives = monthFilter === 'all' ? drives : drives.filter(r => r.date.startsWith(monthFilter));
+
+  // 总体统计(按筛选)
+  const totalKwh = filteredDrives.reduce((sum, r) => sum + (r.startSoc - r.endSoc) / 100 * cap, 0);
+  const totalKm = filteredDrives.reduce((sum, r) => sum + (r.endMileage && r.startMileage ? r.endMileage - r.startMileage : 0), 0);
   const avgPer100 = totalKm > 0 ? totalKwh / totalKm * 100 : 0;
 
   // 今日统计
@@ -1694,6 +1708,60 @@ function renderStats() {
     ${longestTrip ? `<div style="font-size:13px;color:var(--text-light);text-align:center">🏆 最长一段: <strong style="color:var(--text)">${longestTrip.name}</strong> · ${longestTrip.km}km</div>` : ''}
   `;
 
+  // 月份筛选器切换
+document.getElementById('stats-month-filter').addEventListener('change', () => {
+  renderStats();
+});
+
+// 填充月份筛选器选项
+  (function populateMonthFilter() {
+    const sel = document.getElementById('stats-month-filter');
+    if (!sel) return;
+    const months = new Set();
+    drives.forEach(r => months.add(r.date.slice(0, 7))); // YYYY-MM
+    const sorted = Array.from(months).sort().reverse();
+    const current = sel.value;
+    sel.innerHTML = '<option value="all">📊 全部时间(累计)</option>' +
+      sorted.map(m => `<option value="${m}">${m}</option>`).join('');
+    sel.value = current || 'all';
+  })();
+
+  // 月报卡片
+  (function renderMonthReport() {
+    const closed = filteredDrives.filter(r => r.status === 'closed');
+    const nightTrips = filteredDrives.filter(r => r.status === 'closed' && r.nightDrain > 0);
+    const longest = closed.reduce((best, r) => {
+      const km = (r.endMileage || 0) - (r.startMileage || 0);
+      return km > (best ? best.km : 0) ? {km, name: r.tripName || '行程', date: r.date} : best;
+    }, null);
+    const title = monthFilter === 'all' ? '全部时间' : monthFilter;
+    const dayCount = monthFilter === 'all'
+      ? new Set(drives.map(r => r.date)).size
+      : new Set(filteredDrives.map(r => r.date)).size;
+    document.getElementById('month-report').innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-card highlight" style="padding:12px">
+          <div class="stat-label">${title} 里程</div>
+          <div class="stat-value">${fmt(totalKm, 0)} <span class="stat-unit">km</span></div>
+        </div>
+        <div class="stat-card highlight" style="padding:12px">
+          <div class="stat-label">${title} 耗电</div>
+          <div class="stat-value">${fmt(totalKwh, 1)} <span class="stat-unit">kWh</span></div>
+        </div>
+        <div class="stat-card" style="padding:12px">
+          <div class="stat-label">百公里电耗</div>
+          <div class="stat-value">${totalKm > 0 ? fmt(avgPer100, 2) : '--'} <span class="stat-unit">kWh</span></div>
+        </div>
+        <div class="stat-card" style="padding:12px">
+          <div class="stat-label">行程段数</div>
+          <div class="stat-value">${closed.length}<span class="stat-unit">段 / ${dayCount} 天</span></div>
+        </div>
+      </div>
+      ${longest ? `<div style="font-size:13px;color:var(--text-light);text-align:center;margin-top:8px">🏆 最长一段: <strong style="color:var(--text)">${longest.name}</strong> · ${longest.date} · ${longest.km}km</div>` : ''}
+      ${nightTrips.length > 0 ? `<div style="font-size:13px;color:var(--text-light);text-align:center;margin-top:4px">🌙 夜间耗电: ${nightTrips.length} 次 · 累计 <strong style="color:var(--text)">${fmt(nightTrips.reduce((s,r) => s + (r.nightDrain||0), 0), 1)}%</strong></div>` : ''}
+    `;
+  })();
+
   const grid = document.getElementById('stats-grid');
   grid.innerHTML = `
     <div class="stat-card highlight">
@@ -1710,13 +1778,13 @@ function renderStats() {
     </div>
     <div class="stat-card">
       <div class="stat-label">记录数</div>
-      <div class="stat-value">${drives.length} <span class="stat-unit">次行程</span></div>
+      <div class="stat-value">${filteredDrives.length} <span class="stat-unit">次行程</span></div>
     </div>
   `;
 
   // ========= 空调耗电洞察 =========
   const acOn = [], acOff = [];
-  drives.forEach(r => {
+  filteredDrives.forEach(r => {
     if (!r.startMileage || !r.endMileage) return;
     const kwh = (r.startSoc - r.endSoc) / 100 * cap;
     const km = r.endMileage - r.startMileage;
@@ -1759,7 +1827,7 @@ function renderStats() {
 
   // ========= 回馈模式洞察 =========
   const regenStd = [], regenStrong = [];
-  drives.forEach(r => {
+  filteredDrives.forEach(r => {
     if (!r.startMileage || !r.endMileage) return;
     const kwh = (r.startSoc - r.endSoc) / 100 * cap;
     const km = r.endMileage - r.startMileage;
@@ -1804,7 +1872,7 @@ function renderStats() {
   const nightLabelMap = {sentry:'📹 哨兵模式', disinfect:'🔥 高温消毒', ac_pre:'❄️ 空调预约', other:'其他', none:'无耗电'};
   const nightGroups = {};
   let totalNightDrain = 0, nightCount = 0;
-  drives.filter(r => r.status === 'closed' && r.nightDrain > 0).forEach(r => {
+  filteredDrives.filter(r => r.status === 'closed' && r.nightDrain > 0).forEach(r => {
     const k = r.nightMode || 'other';
     if (!nightGroups[k]) nightGroups[k] = {sum:0, count:0};
     nightGroups[k].sum += r.nightDrain;
@@ -1842,7 +1910,7 @@ function renderStats() {
 
   // 日耗电趋势
   const dailyMap = {};
-  drives.forEach(r => {
+  filteredDrives.forEach(r => {
     const kwh = (r.startSoc - r.endSoc) / 100 * cap;
     const km = r.endMileage && r.startMileage ? r.endMileage - r.startMileage : 0;
     if (!dailyMap[r.date]) dailyMap[r.date] = {kwh:0, km:0};
@@ -1875,7 +1943,7 @@ function renderStats() {
 
   // 温度 vs 电耗（体感映射成温度中位数）
   const tempToC = {very_cold:0, cold:10, cool:17, comfort:24, warm:31, very_hot:37};
-  const tempData = drives
+  const tempData = filteredDrives
     .filter(r => r.temp && tempToC[r.temp] != null && r.startMileage && r.endMileage)
     .map(r => {
       const kwh = (r.startSoc - r.endSoc) / 100 * cap;
@@ -1900,7 +1968,7 @@ function renderStats() {
 
   // 路况电耗对比
   const roadMap = {};
-  drives.forEach(r => {
+  filteredDrives.forEach(r => {
     if (!r.roadType || !r.startMileage || !r.endMileage) return;
     const kwh = (r.startSoc - r.endSoc) / 100 * cap;
     const km = r.endMileage - r.startMileage;
@@ -1924,7 +1992,7 @@ function renderStats() {
 
   // 驾驶 vs 夜间耗电占比(饼图)
   let driveKwh = 0, nightKwh = 0;
-  drives.filter(r => r.status === 'closed').forEach(r => {
+  filteredDrives.filter(r => r.status === 'closed').forEach(r => {
     driveKwh += (r.startSoc - r.endSoc) / 100 * cap;
     nightKwh += (r.nightDrain || 0) / 100 * cap;
   });
