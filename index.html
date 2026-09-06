@@ -1328,32 +1328,9 @@ details.fold .fbody{padding:0 16px 16px}
     <p class="muted" id="homeLzTip" style="margin-top:10px">还没记过账，点「去记一笔」开个头。</p>
   </div>
 
-  <div class="card" id="homeBackupCard">
-    <h3>💾 备份与恢复 <span class="tag" id="homeBackupState">从未备份</span></h3>
-    <p class="muted" id="homeBackupMsg" style="line-height:1.8"></p>
-    <div class="actions">
-      <button class="btn" id="btnAllBackup">⬇ 一键备份全部</button>
-      <button class="btn-ghost btn" id="btnAllRestore">📥 导入恢复</button>
-      <button class="btn-ghost btn" id="btnGoBackupCenter">🛠 备份中心</button>
-    </div>
-    <input accept=".json" class="hidden" id="allRestoreFile" type="file">
-    <p class="muted" style="margin-top:10px; line-height:1.8">
-      备份打包全部 9 个工具的记录与设置，恢复时可选「合并」或「覆盖」。各工具内部也保留各自的导出功能。
-    </p>
-  </div>
-
   <div class="sectionTitle">全部工具 <small id="homeModCount"></small></div>
   <div class="home-grid" id="homeGrid"></div>
 
-  <div class="card">
-    <h3>💡 使用说明</h3>
-    <p class="muted" style="line-height:1.9">
-      · 单文件离线应用：双击本文件即可使用，无需联网，数据不上传<br>
-      · 数据保存在当前浏览器的 localStorage，换设备 / 清缓存会丢失，请定期备份<br>
-      · 手机建议添加到主屏幕：iOS Safari 分享 → 添加到主屏幕；Android Chrome 菜单 → 添加到主屏幕<br>
-      · 原来单独用的记账小程序，其导出的备份可在「备份 → 导入记账小程序备份」里直接恢复
-    </p>
-  </div>
 </section>
 <!-- ================= 备份恢复中心（新增） ================= -->
 <section class="view" id="view-backup">
@@ -1412,10 +1389,36 @@ details.fold .fbody{padding:0 16px 16px}
     <h3>📱 存储位置</h3>
     <p class="muted" id="meStore" style="line-height:1.8"></p>
   </div>
+  <details class="fold">
+    <summary>💾 备份与恢复 <span class="tag" id="homeBackupState">从未备份</span></summary>
+    <div class="fbody">
+      <p class="muted" id="homeBackupMsg" style="line-height:1.8"></p>
+      <div class="actions">
+        <button class="btn" id="btnAllBackup">⬇ 一键备份全部</button>
+        <button class="btn-ghost btn" id="btnAllRestore">📥 导入恢复</button>
+        <button class="btn-ghost btn" id="btnGoBackupCenter">🛠 备份中心</button>
+      </div>
+      <input accept=".json" class="hidden" id="allRestoreFile" type="file">
+      <p class="muted" style="margin-top:10px; line-height:1.8">备份打包全部 9 个工具的记录与设置，恢复时可选「合并」或「覆盖」。</p>
+    </div>
+  </details>
+
   <div class="card">
     <h3>🧭 快捷跳转</h3>
     <div class="chips" id="meChips" style="padding:4px 0"></div>
   </div>
+  <details class="fold">
+    <summary>💡 使用说明</summary>
+    <div class="fbody">
+      <p class="muted" style="line-height:1.9">
+        · 单文件离线应用：双击本文件即可使用，无需联网，数据不上传<br>
+        · 数据保存在当前浏览器的 localStorage，换设备 / 清缓存会丢失，请定期备份<br>
+        · 手机建议添加到主屏幕：iOS Safari 分享 → 添加到主屏幕；Android Chrome 菜单 → 添加到主屏幕<br>
+        · 原来单独用的记账小程序，其导出的备份可在「备份 → 导入记账小程序备份」里直接恢复
+      </p>
+    </div>
+  </details>
+
   <div class="card">
     <h3>📌 装到手机桌面</h3>
     <p class="muted" style="line-height:1.9">
@@ -8287,9 +8290,16 @@ document.addEventListener('DOMContentLoaded', () => {
     try { var raw = localStorage.getItem(KEY); d = raw ? JSON.parse(raw) : null; } catch (e) {}
     if (!d || !d.recs) return { exp: 0, inc: 0, today: 0, n: 0 };
     var exp = 0, inc = 0, today = 0;
+    var now = new Date();
+    var thisMonth = ymOf(now);
+    var thisDay = toStr(now);
     d.recs.forEach(function (r) {
-      if (r.type === 'expense') { exp += r.cents; if (r.date === T) today += r.cents; }
-      else if (r.type === 'income') inc += r.cents;
+      if (r.type === 'expense') {
+        if (ym(r.date) === thisMonth) exp += r.cents;
+        if (r.date === thisDay) today += r.cents;
+      } else if (r.type === 'income') {
+        if (ym(r.date) === thisMonth) inc += r.cents;
+      }
     });
     return { exp: exp, inc: inc, today: today, n: d.recs.length };
   }
@@ -8538,7 +8548,6 @@ document.addEventListener('DOMContentLoaded', () => {
   App.NAV_MAIN = [
     { k: 'home', icon: '🏠', label: '首页' },
     { k: 'ledger', icon: '💰', label: '记账' },
-    { k: 'backup', icon: '💾', label: '备份' },
     { k: 'me', icon: '👤', label: '我的' }
   ];
   App.renderNav = function () {
@@ -8553,7 +8562,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const cur = App.current;
     if (cur === 'home' || cur === 'backup' || cur === 'me') {
-      App.NAV_MAIN.forEach(t => mk(t.icon, t.label, t.k === cur, () => App.activate(t.k)));
+      const hl = cur === 'backup' ? 'me' : cur;
+      App.NAV_MAIN.forEach(t => mk(t.icon, t.label, t.k === hl, () => App.activate(t.k)));
       return;
     }
     mk('🏠', '首页', false, () => App.goHome());
@@ -8575,6 +8585,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const v = (cents || 0) / 100;
     return v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
+  App.renderBackupStatus = function () {
+    const last = localStorage.getItem(App.LS_LAST);
+    const ago = App.fmtAgo(last);
+    const stEl = App.$('homeBackupState');
+    if (stEl) {
+      stEl.textContent = ago ? (ago + '备份过') : '从未备份';
+      stEl.style.color = (!ago || (Date.now() - new Date(last).getTime()) > 14 * 86400000) ? 'var(--red)' : 'var(--green)';
+    }
+    const msgEl = App.$('homeBackupMsg');
+    if (msgEl) {
+      msgEl.textContent = ago
+        ? '上次备份：' + ago + '。建议每 1~2 周备份一次，换手机或清缓存前一定要先备份。'
+        : '还没有备份过。数据只存在这台设备上，清缓存 / 换设备就没了，建议现在就备份一份。';
+    }
+    const tipEl = App.$('homeBackupTip');
+    if (tipEl) tipEl.textContent = ago ? (ago + '备份过') : '尚未备份';
+  };
+
   App.renderHome = function () {
     const t = new Date();
     App.$('homeToday').textContent = t.getFullYear() + '年' + (t.getMonth() + 1) + '月' + t.getDate() + '日';
@@ -8590,15 +8618,7 @@ document.addEventListener('DOMContentLoaded', () => {
       : '还没记过账，点「去记一笔」开个头。原始数据可在「备份 → 导入记账小程序备份」恢复。';
 
     /* 备份状态 */
-    const last = localStorage.getItem(App.LS_LAST);
-    const ago = App.fmtAgo(last);
-    const stEl = App.$('homeBackupState');
-    stEl.textContent = ago ? (ago + '备份过') : '从未备份';
-    stEl.style.color = (!ago || (Date.now() - new Date(last).getTime()) > 14 * 86400000) ? 'var(--red)' : 'var(--green)';
-    App.$('homeBackupMsg').textContent = ago
-      ? '上次备份：' + ago + '。建议每 1~2 周备份一次，换手机或清缓存前一定要先备份。'
-      : '还没有备份过。数据只存在这台设备上，清缓存 / 换设备就没了，建议现在就备份一份。';
-    App.$('homeBackupTip').textContent = ago ? (ago + '备份过') : '尚未备份';
+    App.renderBackupStatus();
 
     /* 工具宫格 */
     const grid = App.$('homeGrid');
@@ -8687,6 +8707,7 @@ document.addEventListener('DOMContentLoaded', () => {
       '当前：<b>' + (location.protocol === 'file:' ? '本地版' : '在线版') + '</b> · 存于 ' + where + '<br>' +
       (ok ? '浏览器本地存储可正常写入。' : '<b style="color:var(--red)">这个环境不让写入本地存储，改动关掉页面就丢了，请立刻导出备份。</b>') +
       '<br>本机的记录不会自动同步到别的设备，靠「备份 → 导出 / 恢复」搬。';
+    App.renderBackupStatus();
     const chips = App.$('meChips');
     chips.innerHTML = '';
     App.order.forEach(id => {
