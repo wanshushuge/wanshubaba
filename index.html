@@ -7346,6 +7346,19 @@ document.addEventListener('DOMContentLoaded', () => {
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
     catch(e){ memStore = arr.slice(); if(!persistWarn){ persistWarn = true; App.toast('当前环境无法本地保存，请用「导出」备份', 2600); } }
   }
+  function syncChargeCalendar(date, mark){
+    try{
+      var key = 'ev_charged_records';
+      var charged = JSON.parse(localStorage.getItem(key) || '{}') || {};
+      if(mark){
+        charged[date] = 1;
+      } else {
+        var still = loadRaw().some(function(r){ return r.date === date; });
+        if(!still) delete charged[date];
+      }
+      localStorage.setItem(key, JSON.stringify(charged));
+    }catch(e){}
+  }
   function getEnriched(){ return enrichRecords(loadRaw().slice()); }
 
   function enrichRecords(records){
@@ -7601,6 +7614,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else { record.createTime=Date.now(); records.push(record); }
     enrichRecords(records);
     saveRaw(records);
+    syncChargeCalendar(date, true);
     state.editingId=null;
     state.currentView='list';
     render();
@@ -7693,9 +7707,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function doDelete(id){
     var records=loadRaw();
+    var deleted = records.find(function(r){return r.id===id;});
     records=records.filter(function(r){return r.id!==id;});
     enrichRecords(records);
     saveRaw(records);
+    if(deleted) syncChargeCalendar(deleted.date, false);
     if(state.currentView==='list') render();
     App.toast('已删除');
   }
@@ -7791,6 +7807,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     enrichRecords(existing);
     saveRaw(existing);
+    existing.forEach(function(r){ syncChargeCalendar(r.date, true); });
     state.parsedImport=null;
     closeModal();
     if(state.currentView==='list') render();
