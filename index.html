@@ -195,8 +195,8 @@ details.fold .fbody{padding:0 15px 14px}
 .home-hero h1{font-size:24px;font-weight:800;letter-spacing:1px}
 .home-hero p{font-size:12.5px;opacity:.88;margin-top:6px}
 .home-hero .hpill{display:inline-flex;gap:6px;align-items:center;margin-top:12px;padding:5px 14px;border-radius:999px;font-size:12px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3)}
-.home-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px}
-@media(max-width:360px){.home-grid{grid-template-columns:1fr 1fr}}
+.home-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:12px}
+@media(max-width:520px){.home-grid{grid-template-columns:repeat(2,1fr)}}
 .mod-card{
   background:rgba(255,255,255,0.50);border:1px solid rgba(255,255,255,0.65);border-radius:18px;padding:12px 10px;backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
   box-shadow:0 8px 32px rgba(31,38,135,0.08),0 2px 8px rgba(31,38,135,0.04);display:flex;flex-direction:column;gap:6px;text-align:left;
@@ -210,6 +210,13 @@ details.fold .fbody{padding:0 15px 14px}
 .mod-card .mcName{font-size:13.5px;font-weight:700}
 .mod-card .mcDesc{font-size:11px;color:var(--sub);line-height:1.5;min-height:32px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .mod-card .mcMeta{font-size:10.5px;color:var(--sub);display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+@media(min-width:521px){.mod-card{align-items:center;text-align:center;padding:14px 6px;gap:6px}.mod-card .mcIcon{margin:0 auto}.mod-card .mcDesc{display:none}.mod-card .mcMeta{justify-content:center}}
+.order-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-soft)}
+.order-row:last-child{border-bottom:none}
+.order-row .order-name{font-size:14px;color:var(--text)}
+.order-row .order-btns{display:flex;gap:6px}
+.order-row button{width:34px;height:34px;border-radius:9px;border:1px solid var(--line-soft);background:var(--card-strong);color:var(--text);font-size:15px;cursor:pointer;line-height:1}
+.order-row button:disabled{opacity:.3;cursor:default}
 .mod-card .mcMeta b{color:var(--blue);font-variant-numeric:tabular-nums}
 
 /* ============================================================
@@ -1408,6 +1415,16 @@ details.fold .fbody{padding:0 16px 16px}
     <div class="chips" id="meChips" style="padding:4px 0"></div>
   </div>
   <details class="fold">
+    <summary>🔧 工具排列设置</summary>
+    <div class="fbody">
+      <p class="muted" style="margin-bottom:8px">调整工具在首页宫格中的顺序，点 ↑/↓ 移动。</p>
+      <div id="meOrderList"></div>
+      <div class="actions">
+        <button class="btn-ghost btn btn-sm" id="meOrderReset">恢复默认顺序</button>
+      </div>
+    </div>
+  </details>
+  <details class="fold">
     <summary>💡 使用说明</summary>
     <div class="fbody">
       <p class="muted" style="line-height:1.9">
@@ -2354,6 +2371,102 @@ details.fold .fbody{padding:0 16px 16px}
     </div>
   </div>
 </section>
+<style>
+/* ============================================================
+   元UP充电账本（scoped 到 #view-charge2，紫色毛玻璃适配）
+   ============================================================ */
+#view-charge2{
+  --c2-blue:#7048e8; --c2-blue-d:#5f3dc4; --c2-soft:rgba(112,72,232,0.10);
+  --c2-red:#e03131; --c2-line:rgba(255,255,255,0.55);
+}
+#view-charge2 .c2-list-bar{display:flex;align-items:center;justify-content:space-between;background:var(--card);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin:12px;box-shadow:var(--shadow-card)}
+#view-charge2 .c2-lb-count b{font-size:22px;color:var(--c2-blue);line-height:1.2;display:block}
+#view-charge2 .c2-lb-count span{font-size:12px;color:var(--sub)}
+#view-charge2 .c2-mini{border:none;font-size:13px;line-height:34px;height:34px;padding:0 16px;border-radius:17px;background:var(--c2-soft);color:var(--c2-blue);cursor:pointer}
+#view-charge2 .c2-card{background:var(--card);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid var(--line);border-radius:18px;padding:16px;margin:0 12px 12px;box-shadow:var(--shadow-card)}
+#view-charge2 .c2-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap}
+#view-charge2 .c2-card-date{font-size:16px;font-weight:600;color:var(--text)}
+#view-charge2 .c2-card-right{display:flex;align-items:center;gap:8px}
+#view-charge2 .c2-card-amt{font-size:17px;font-weight:700;color:var(--c2-blue)}
+#view-charge2 .c2-link{font-size:12.5px;color:var(--c2-blue);padding:3px 10px;border:1px solid var(--c2-blue);border-radius:14px;cursor:pointer;background:transparent}
+#view-charge2 .c2-link.danger{color:var(--c2-red);border-color:var(--c2-red)}
+#view-charge2 .c2-card-body{display:flex;flex-wrap:wrap}
+#view-charge2 .c2-field{width:33.33%;display:flex;flex-direction:column;margin-bottom:10px}
+#view-charge2 .c2-flabel{font-size:11px;color:var(--sub);margin-bottom:2px}
+#view-charge2 .c2-fvalue{font-size:14px;color:var(--text);font-weight:500}
+#view-charge2 .c2-fvalue.hl{color:var(--c2-blue);font-weight:700}
+#view-charge2 .c2-empty{display:flex;flex-direction:column;align-items:center;padding-top:60px;color:var(--sub)}
+#view-charge2 .c2-empty-icon{font-size:60px;margin-bottom:14px}
+#view-charge2 .c2-empty-text{font-size:16px;color:var(--text)}
+#view-charge2 .c2-empty-sub{font-size:13px;margin-top:6px;text-align:center;padding:0 30px;color:var(--sub)}
+#view-charge2 .c2-form-card{background:var(--card);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid var(--line);border-radius:18px;padding:4px 16px;margin:0 12px;box-shadow:var(--shadow-card)}
+#view-charge2 .c2-form-item{padding:13px 0;border-bottom:1px solid var(--line-soft)}
+#view-charge2 .c2-form-item:last-child{border-bottom:none}
+#view-charge2 .c2-label{font-size:14px;color:var(--text);font-weight:600;display:block;margin-bottom:8px}
+#view-charge2 .c2-req{color:var(--c2-red)}
+#view-charge2 .c2-input{width:100%;height:44px;line-height:44px;font-size:15px;background:var(--card-strong);border:1px solid var(--line-soft);border-radius:12px;padding:0 14px;color:var(--text);outline:none;box-sizing:border-box}
+#view-charge2 .c2-input:focus{border-color:var(--c2-blue)}
+#view-charge2 .c2-preview{margin:14px 0;background:var(--c2-soft);border-radius:12px;padding:14px 16px}
+#view-charge2 .c2-preview-title{font-size:13px;color:var(--c2-blue);font-weight:600;display:block;margin-bottom:8px}
+#view-charge2 .c2-pv-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:14px;color:var(--text)}
+#view-charge2 .c2-pv-row b{color:var(--c2-blue);font-weight:700}
+#view-charge2 .c2-btn-primary{margin-top:20px;width:100%;background:linear-gradient(135deg,var(--c2-blue),#9775fa);color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:600;height:48px;cursor:pointer;box-shadow:0 4px 12px rgba(112,72,232,0.25)}
+#view-charge2 .c2-btn-secondary{margin-top:10px;width:100%;background:var(--card-strong);color:var(--sub);border:none;border-radius:16px;font-size:15px;height:44px;cursor:pointer}
+#view-charge2 .c2-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 12px 14px}
+#view-charge2 .c2-grid-item{background:var(--card);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;box-shadow:var(--shadow-card)}
+#view-charge2 .c2-g-num{font-size:20px;font-weight:700;color:var(--c2-blue);line-height:1.2;word-break:break-all}
+#view-charge2 .c2-g-label{font-size:12px;color:var(--sub);margin-top:4px}
+#view-charge2 .c2-seg{display:flex;background:var(--c2-soft);border-radius:12px;padding:4px;margin:0 12px 14px}
+#view-charge2 .c2-seg-item{flex:1;text-align:center;font-size:14px;color:var(--c2-blue);padding:9px 0;border-radius:9px;cursor:pointer;user-select:none}
+#view-charge2 .c2-seg-item.active{background:var(--c2-blue);color:#fff;font-weight:600}
+#view-charge2 .c2-block{background:var(--card);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid var(--line);border-radius:18px;padding:16px;margin:0 12px 14px;box-shadow:var(--shadow-card)}
+#view-charge2 .c2-block-title{font-size:15px;font-weight:600;display:block;margin-bottom:10px;padding-left:10px;border-left:4px solid var(--c2-blue);color:var(--text)}
+#view-charge2 .c2-period{padding:14px 0;border-bottom:1px solid var(--line-soft)}
+#view-charge2 .c2-period:last-child{border-bottom:none;padding-bottom:0}
+#view-charge2 .c2-period-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+#view-charge2 .c2-period-label{font-size:15px;font-weight:600;color:var(--text)}
+#view-charge2 .c2-period-count{font-size:12px;color:var(--sub)}
+#view-charge2 .c2-period-grid{display:flex;gap:8px}
+#view-charge2 .c2-pg{flex:1;background:var(--c2-soft);border-radius:10px;padding:10px 0;display:flex;flex-direction:column;align-items:center}
+#view-charge2 .c2-pg-num{font-size:15px;font-weight:700;color:var(--c2-blue);word-break:break-all}
+#view-charge2 .c2-pg-lab{font-size:11px;color:var(--sub);margin-top:3px}
+#view-charge2 .c2-period-foot{display:flex;justify-content:space-between;margin-top:10px;font-size:13px;color:var(--sub);flex-wrap:wrap;gap:4px}
+#view-charge2 .c2-foot-hl{color:var(--c2-blue);font-weight:700}
+#view-charge2 .c2-metric-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line-soft)}
+#view-charge2 .c2-metric-row:last-child{border-bottom:none}
+#view-charge2 .c2-m-label{font-size:14px;color:var(--sub)}
+#view-charge2 .c2-m-value{font-size:16px;font-weight:700;color:var(--c2-blue)}
+#view-charge2 .c2-best{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line-soft)}
+#view-charge2 .c2-best:last-child{border-bottom:none}
+#view-charge2 .c2-tag{font-size:11px;color:#fff;padding:3px 10px;border-radius:12px;flex-shrink:0}
+#view-charge2 .c2-tag.good{background:var(--green)}
+#view-charge2 .c2-tag.bad{background:var(--c2-red)}
+#view-charge2 .c2-b-info{flex:1}
+#view-charge2 .c2-b-date{font-size:13px;color:var(--text)}
+#view-charge2 .c2-b-cost{font-size:14px;font-weight:700;color:var(--c2-blue)}
+#view-charge2 .c2-mask{position:fixed;inset:0;background:rgba(31,38,135,0.35);display:flex;align-items:center;justify-content:center;z-index:2000;padding:24px;backdrop-filter:blur(6px)}
+#view-charge2 .c2-modal{width:100%;max-width:340px;background:var(--card-strong);border-radius:18px;padding:22px 20px 18px;box-shadow:var(--shadow-pop)}
+#view-charge2 .c2-modal-title{display:block;font-size:18px;font-weight:700;text-align:center;color:var(--text)}
+#view-charge2 .c2-modal-sub{display:block;font-size:13px;color:var(--sub);text-align:center;margin-top:6px;margin-bottom:16px}
+#view-charge2 .c2-modal-section{display:block;font-size:13px;color:var(--sub);margin:6px 0 8px}
+#view-charge2 .c2-modal-btns{display:flex;gap:10px;margin-top:6px}
+#view-charge2 .c2-modal-btns button{flex:1;margin:0;height:44px;line-height:44px;font-size:15px;border-radius:22px;border:none;cursor:pointer}
+#view-charge2 .c2-btn-cancel{background:rgba(31,38,135,0.06);color:var(--text)}
+#view-charge2 .c2-btn-confirm{background:linear-gradient(135deg,var(--c2-blue),#9775fa);color:#fff;font-weight:600}
+#view-charge2 .c2-import-note{font-size:12px;color:var(--sub);line-height:1.6;margin:2px 0 8px}
+#view-charge2 .c2-import-cancel{text-align:center;font-size:14px;color:var(--sub);margin-top:12px;cursor:pointer}
+#view-charge2 .c2-chart-wrap{margin-top:6px}
+#view-charge2 .c2-chart-wrap svg{display:block;width:100%;height:auto}
+#view-charge2 .c2-add-title{font-size:17px;font-weight:700;margin:14px 14px 4px;color:var(--text)}
+
+</style>
+<!-- ================= 元UP充电账本（第10个工具） ================= -->
+<section class="view" id="view-charge2">
+  <div id="c2-view"></div>
+  <div id="c2-modal-root"></div>
+  <input type="file" id="c2-file-input" class="hidden" accept=".json,.csv,.txt,application/json,text/csv,text/plain">
+</section>
+
 </main>
 
 <!--pnid:krDsSffEW4R82pBj8Fu7PH--><!-- ================= 底部导航 ================= -->
@@ -7210,6 +7323,514 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <script>
 /* ============================================================
+   模块：元UP充电账本（集成自「元UP充电.html」，localStorage: charge_records）
+   新增：每公里成本（costPerKm）
+   修复：编辑后 toast 提示「已更新」
+   ============================================================ */
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = 'charge_records';
+  var BATTERY_CAPACITY = 45.12;
+  var NOMINAL_RANGE = 401;
+
+  var memStore = null, persistWarn = false;
+
+  function $id(id){ return document.getElementById(id); }
+
+  function loadRaw(){
+    try{ var s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : []; }
+    catch(e){ return memStore ? memStore.slice() : []; }
+  }
+  function saveRaw(arr){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+    catch(e){ memStore = arr.slice(); if(!persistWarn){ persistWarn = true; App.toast('当前环境无法本地保存，请用「导出」备份', 2600); } }
+  }
+  function getEnriched(){ return enrichRecords(loadRaw().slice()); }
+
+  function enrichRecords(records){
+    if(!Array.isArray(records)) return records;
+    records.forEach(function(r){
+      var amt = parseFloat(r.amount)||0, kwh = parseFloat(r.kwh)||0;
+      var b = parseFloat(r.beforePercent)||0, a = parseFloat(r.afterPercent)||0;
+      r.costPerKwh = kwh>0 ? parseFloat((amt/kwh).toFixed(2)) : '';
+      var theoretical = BATTERY_CAPACITY*(a-b)/100;
+      r.lossKwh = parseFloat((kwh-theoretical).toFixed(2));
+      r.consumedKwh=''; r.kwhPer100=''; r.costPerKm='';
+    });
+    var sorted = records.slice().sort(function(x,y){
+      if(x.date!==y.date) return x.date<y.date?-1:1;
+      return (x.createTime||0)-(y.createTime||0);
+    });
+    sorted.forEach(function(r,i){
+      if(i===0){ r.rangeAchievement=''; r.kmPerPercent=''; r.consumedKwh=''; r.kwhPer100=''; r.costPerKm=''; return; }
+      var prevAfter=parseFloat(sorted[i-1].afterPercent)||0;
+      var curBefore=parseFloat(r.beforePercent)||0;
+      var mileage=parseFloat(r.mileage)||0;
+      var dropPct=prevAfter-curBefore;
+      if(dropPct>0 && mileage>0){
+        r.rangeAchievement=parseFloat((mileage/(dropPct/100)/NOMINAL_RANGE*100).toFixed(1));
+        r.kmPerPercent=parseFloat((mileage/dropPct).toFixed(2));
+        r.consumedKwh=parseFloat((BATTERY_CAPACITY*dropPct/100).toFixed(2));
+        r.kwhPer100=parseFloat((r.consumedKwh/mileage*100).toFixed(2));
+        var prevCost = sorted[i-1].costPerKwh;
+        r.costPerKm = (prevCost !== '' && !isNaN(parseFloat(prevCost))) ? parseFloat((r.consumedKwh * parseFloat(prevCost) / mileage).toFixed(3)) : '';
+      } else {
+        r.rangeAchievement=''; r.kmPerPercent=''; r.consumedKwh=''; r.kwhPer100=''; r.costPerKm='';
+      }
+    });
+    return records;
+  }
+
+  function buildPeriodSummary(records, mode){
+    if(!Array.isArray(records)) return [];
+    var data = enrichRecords(records.slice());
+    var groups = {};
+    data.forEach(function(r){
+      var key='', label='';
+      if(r.date){
+        if(mode==='month'){ var yy=r.date.slice(0,4), mm=r.date.slice(5,7); key=yy+'-'+mm; label=yy+'年'+parseInt(mm,10)+'月'; }
+        else { key=r.date.slice(0,4); label=key+'年'; }
+      }
+      if(!groups[key]) groups[key]={label:label,amount:0,kwh:0,mileage:0,count:0,sumRange:0,rangeCount:0,consumed:0,consumedMileage:0};
+      groups[key].amount+=parseFloat(r.amount)||0;
+      groups[key].kwh+=parseFloat(r.kwh)||0;
+      groups[key].mileage+=parseFloat(r.mileage)||0;
+      groups[key].count+=1;
+      if(r.rangeAchievement!==''&&!isNaN(parseFloat(r.rangeAchievement))){ groups[key].sumRange+=parseFloat(r.rangeAchievement); groups[key].rangeCount+=1; }
+      if(r.consumedKwh!==''&&!isNaN(parseFloat(r.consumedKwh))&&parseFloat(r.mileage)>0){ groups[key].consumed+=parseFloat(r.consumedKwh); groups[key].consumedMileage+=parseFloat(r.mileage); }
+    });
+    return Object.keys(groups).sort(function(a,b){return b.localeCompare(a);}).map(function(key){
+      var g=groups[key];
+      return {
+        key:key, label:g.label, count:g.count,
+        amount:parseFloat(g.amount.toFixed(2)),
+        kwh:parseFloat(g.kwh.toFixed(2)),
+        mileage:parseFloat(g.mileage.toFixed(1)),
+        costPerKm:g.mileage>0?parseFloat((g.amount/g.mileage).toFixed(3)):0,
+        costPerKwh:g.kwh>0?parseFloat((g.amount/g.kwh).toFixed(2)):0,
+        kwhPer100:g.consumedMileage>0?parseFloat((g.consumed/g.consumedMileage*100).toFixed(2)):0,
+        rangeAchievement:g.rangeCount>0?parseFloat((g.sumRange/g.rangeCount).toFixed(1)):0
+      };
+    });
+  }
+
+  var CSV_FIELD = { date:'充电日期', beforePercent:'充电前电量(%)', afterPercent:'充电后电量(%)', amount:'充电金额(元)', kwh:'充电度数(kWh)', mileage:'本次里程(km)', channel:'充电渠道' };
+  function normalizeRecord(raw){
+    if(!raw||typeof raw!=='object') return null;
+    function pick(en){ return (raw[en]!==undefined&&raw[en]!==null&&raw[en]!=='')?raw[en]:undefined; }
+    var date=String(pick('date')||'').trim();
+    var b=parseFloat(pick('beforePercent'));
+    var a=parseFloat(pick('afterPercent'));
+    var k=parseFloat(pick('kwh'));
+    var m=parseFloat(pick('mileage'));
+    if(!date||isNaN(b)||isNaN(a)||isNaN(k)||isNaN(m)) return null;
+    var amt=parseFloat(pick('amount'));
+    var ch=String(pick('channel')||'').trim();
+    return { date:date, beforePercent:b, afterPercent:a, amount:isNaN(amt)?0:amt, kwh:k, mileage:m, channel:ch };
+  }
+  function parseCsvLine(line){
+    var res=[], cur='', inQ=false;
+    for(var i=0;i<line.length;i++){
+      var c=line[i];
+      if(inQ){ if(c==='"'){ if(line[i+1]==='"'){cur+='"';i++;} else inQ=false; } else cur+=c; }
+      else { if(c==='"') inQ=true; else if(c===','){ res.push(cur); cur=''; } else cur+=c; }
+    }
+    res.push(cur);
+    return res.map(function(s){return s.trim();});
+  }
+  function parseBackup(text){
+    if(!text) return [];
+    text=String(text).replace(/^\uFEFF/,'').trim();
+    if(!text) return [];
+    if(text[0]==='['||text[0]==='{'){
+      var data=JSON.parse(text);
+      if(data&&!Array.isArray(data)&&Array.isArray(data.records)) data=data.records;
+      if(!Array.isArray(data)) throw new Error('JSON 不是记录数组');
+      var out=[];
+      data.forEach(function(it){ var n=normalizeRecord(it); if(n) out.push(n); });
+      return out;
+    }
+    var lines=text.split(/\r?\n/);
+    var detailIdx=-1;
+    lines.forEach(function(l,idx){ if(l.indexOf('充电日期')!==-1&&l.indexOf('充电度数')!==-1&&detailIdx===-1) detailIdx=idx; });
+    if(detailIdx===-1) throw new Error('未找到明细数据行');
+    var headers=parseCsvLine(lines[detailIdx]);
+    var col={};
+    Object.keys(CSV_FIELD).forEach(function(k){ var i=headers.indexOf(CSV_FIELD[k]); if(i!==-1) col[k]=i; });
+    if(col.date===undefined||col.beforePercent===undefined) throw new Error('明细表头不完整');
+    var out2=[];
+    for(var i=detailIdx+1;i<lines.length;i++){
+      var line=lines[i].trim();
+      if(!line) continue;
+      if(line.indexOf('汇总')!==-1||line.indexOf('明细')!==-1) break;
+      var cells=parseCsvLine(lines[i]);
+      var raw={};
+      Object.keys(col).forEach(function(k){ raw[k]=cells[col[k]]; });
+      var n=normalizeRecord(raw);
+      if(n) out2.push(n);
+    }
+    return out2;
+  }
+
+  function formatToday(){
+    var d=new Date(), y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+    return y+'-'+m+'-'+day;
+  }
+  function fmt(n,d){ d=(d===undefined)?2:d; return Number(n).toFixed(d); }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function escAttr(s){ return esc(s); }
+  function downloadFile(filename, content, mime){
+    var blob=new Blob([content],{type:mime});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url; a.download=filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(url);},1500);
+  }
+
+  var state={ currentView:'list', editingId:null, exportScope:'all', exportFormat:'csv', parsedImport:null, periodMode:'month' };
+  var view = $id('c2-view');
+  var modalRoot = $id('c2-modal-root');
+  var fileInput = $id('c2-file-input');
+
+  function field(label,val,hl){ return '<div class="c2-field"><span class="c2-flabel">'+esc(label)+'</span><span class="c2-fvalue'+(hl?' hl':'')+'">'+esc(val)+'</span></div>'; }
+  function cardHTML(r){
+    var cpk = r.costPerKwh!=='' ? r.costPerKwh+' 元/kWh' : '—';
+    var cpkm = r.costPerKm!=='' ? '¥'+r.costPerKm : '—';
+    var k100 = r.kwhPer100!=='' ? r.kwhPer100+' kWh/100km' : '—';
+    var ra = r.rangeAchievement!=='' ? r.rangeAchievement+'%' : '—';
+    var kp = r.kmPerPercent!=='' ? r.kmPerPercent+' km' : '—';
+    return '<div class="c2-card" data-id="'+escAttr(r.id)+'">'
+      + '<div class="c2-card-head"><span class="c2-card-date">'+esc(r.date)+'</span>'
+      + '<span class="c2-card-right"><span class="c2-card-amt">¥'+esc(r.amount)+'</span>'
+      + '<span class="c2-link" data-act="edit" data-id="'+escAttr(r.id)+'">编辑</span>'
+      + '<span class="c2-link danger" data-act="del" data-id="'+escAttr(r.id)+'">删除</span></span></div>'
+      + '<div class="c2-card-body">'
+      + field('充电前', r.beforePercent+'%')
+      + field('充电后', r.afterPercent+'%')
+      + field('本次补电', '+'+r.addedPercent+'%', true)
+      + field('充电度数', r.kwh+' kWh')
+      + field('本次里程', r.mileage+' km')
+      + field('每公里成本', cpkm, true)
+      + field('每度电成本', cpk, true)
+      + field('充电损耗', r.lossKwh+' kWh', true)
+      + field('百公里电耗', k100, true)
+      + field('续航达成率', ra, true)
+      + field('每1%公里', kp, true)
+      + (r.channel?field('充电渠道', r.channel):'')
+      + '</div></div>';
+  }
+  function renderList(){
+    var recs=getEnriched();
+    recs.sort(function(a,b){ if(a.date!==b.date) return a.date<b.date?1:-1; return (b.createTime||0)-(a.createTime||0); });
+    var html='';
+    html+='<div class="c2-list-bar"><div class="c2-lb-count"><b>'+recs.length+'</b><span>条充电记录</span></div>'
+      + '<div><button class="c2-mini" id="c2-btn-import">导入</button> <button class="c2-mini" id="c2-btn-export">导出</button></div></div>';
+    if(recs.length===0){
+      html+='<div class="c2-empty"><div class="c2-empty-icon">🔌</div><div class="c2-empty-text">还没有充电记录</div><div class="c2-empty-sub">点底部「记一笔」开始记录，或点「导入」恢复备份</div></div>';
+    } else {
+      html+='<div>'+recs.map(cardHTML).join('')+'</div>';
+    }
+    view.innerHTML=html;
+    var bi=$id('c2-btn-import'); if(bi) bi.onclick=openImportPicker;
+    var be=$id('c2-btn-export'); if(be) be.onclick=openExport;
+  }
+
+  function renderAdd(){
+    var editing=state.editingId;
+    var rec=null;
+    if(editing){ rec=loadRaw().find(function(r){return r.id===editing;}); }
+    var today=formatToday();
+    var v=rec||{};
+    var title=editing?'编辑充电记录':'添加充电记录';
+    var btn=editing?'更新记录':'保存记录';
+    function val(x){ return (x===undefined||x===null)?'':x; }
+    view.innerHTML='<div class="c2-add-title">'+title+'</div>'
+      + '<div class="c2-form-card">'
+      + '<div class="c2-form-item"><label class="c2-label">充电日期 <span class="c2-req">*</span></label><input class="c2-input" type="date" id="c2-f-date" value="'+escAttr(val(v.date)||today)+'"></div>'
+      + '<div class="c2-form-item"><label class="c2-label">充电前电量 (%) <span class="c2-req">*</span></label><input class="c2-input" type="number" inputmode="decimal" id="c2-f-before" value="'+escAttr(val(v.beforePercent))+'" placeholder="0 - 100"></div>'
+      + '<div class="c2-form-item"><label class="c2-label">充电后电量 (%) <span class="c2-req">*</span></label><input class="c2-input" type="number" inputmode="decimal" id="c2-f-after" value="'+escAttr(val(v.afterPercent))+'" placeholder="0 - 100"></div>'
+      + '<div class="c2-form-item"><label class="c2-label">充电金额 (元) <span class="c2-req">*</span></label><input class="c2-input" type="number" inputmode="decimal" step="0.01" id="c2-f-amount" value="'+escAttr(val(v.amount))+'" placeholder="0.00"></div>'
+      + '<div class="c2-form-item"><label class="c2-label">充电度数 (kWh) <span class="c2-req">*</span></label><input class="c2-input" type="number" inputmode="decimal" step="0.01" id="c2-f-kwh" value="'+escAttr(val(v.kwh))+'" placeholder="0.00"></div>'
+      + '<div class="c2-form-item"><label class="c2-label">本次里程 (km) <span class="c2-req">*</span></label><input class="c2-input" type="number" inputmode="decimal" step="0.1" id="c2-f-mileage" value="'+escAttr(val(v.mileage))+'" placeholder="上次充电至今所跑公里数"></div>'
+      + '<div class="c2-form-item"><label class="c2-label">充电渠道</label><input class="c2-input" id="c2-f-channel" value="'+escAttr(val(v.channel))+'" placeholder="如：家用充电桩 / 特来电 / 蔚景云"></div>'
+      + '</div>'
+      + '<div class="c2-preview" id="c2-preview" style="display:none"><span class="c2-preview-title">⚡ 自动计算预览</span>'
+      + '<div class="c2-pv-row"><span>本次补电量</span><b id="c2-pv-added"></b></div>'
+      + '<div class="c2-pv-row"><span>每度电成本</span><b id="c2-pv-cost"></b></div>'
+      + '<div class="c2-pv-row"><span>充电损耗</span><b id="c2-pv-loss"></b></div></div>'
+      + '<button class="c2-btn-primary" id="c2-btn-save">'+btn+'</button>'
+      + (editing?'<button class="c2-btn-secondary" id="c2-btn-cancel-edit">取消</button>':'');
+    ['c2-f-before','c2-f-after','c2-f-amount','c2-f-kwh'].forEach(function(id){ var el=$id(id); if(el) el.addEventListener('input', addPreview); });
+    $id('c2-btn-save').onclick=onSave;
+    var ce=$id('c2-btn-cancel-edit'); if(ce) ce.onclick=function(){ state.editingId=null; state.currentView='list'; render(); };
+    addPreview();
+  }
+  function addPreview(){
+    var b=parseFloat($id('c2-f-before').value), a=parseFloat($id('c2-f-after').value);
+    var amt=parseFloat($id('c2-f-amount').value), k=parseFloat($id('c2-f-kwh').value);
+    var show=false, added='', cost='', loss='';
+    if(!isNaN(b)&&!isNaN(a)){ added=(a-b).toFixed(1); show=true;
+      if(!isNaN(k)&&k>0){ var t=BATTERY_CAPACITY*(a-b)/100; loss=(k-t).toFixed(2); } }
+    if(!isNaN(amt)&&!isNaN(k)&&k>0){ cost=(amt/k).toFixed(2); show=true; }
+    var p=$id('c2-preview');
+    if(show){ p.style.display='block'; $id('c2-pv-added').textContent='+'+added+'%'; $id('c2-pv-cost').textContent=cost+' 元/kWh'; $id('c2-pv-loss').textContent=loss+' kWh'; }
+    else { p.style.display='none'; }
+  }
+  function onSave(){
+    var date=$id('c2-f-date').value;
+    var b=parseFloat($id('c2-f-before').value), a=parseFloat($id('c2-f-after').value);
+    var amt=parseFloat($id('c2-f-amount').value), k=parseFloat($id('c2-f-kwh').value), m=parseFloat($id('c2-f-mileage').value);
+    var ch=($id('c2-f-channel').value||'').trim();
+    if(!date){ App.toast('请选择充电日期'); return; }
+    if(isNaN(b)||b<0||b>100){ App.toast('充电前电量需在 0-100'); return; }
+    if(isNaN(a)||a<0||a>100){ App.toast('充电后电量需在 0-100'); return; }
+    if(isNaN(amt)||amt<0){ App.toast('请输入有效金额'); return; }
+    if(isNaN(k)||k<0){ App.toast('请输入有效度数'); return; }
+    if(isNaN(m)||m<=0){ App.toast('里程需大于 0'); return; }
+    var addedPercent=parseFloat((a-b).toFixed(1));
+    var record={ id:state.editingId||(Date.now().toString(36)+Math.random().toString(36).slice(2,6)),
+      date:date, beforePercent:b, afterPercent:a, amount:amt, kwh:k, mileage:m, channel:ch, addedPercent:addedPercent };
+    var records=loadRaw();
+    var wasEditing = !!state.editingId;
+    if(state.editingId){
+      var idx=records.findIndex(function(r){return r.id===state.editingId;});
+      if(idx>=0){ record.createTime=records[idx].createTime; records[idx]=record; }
+    } else { record.createTime=Date.now(); records.push(record); }
+    enrichRecords(records);
+    saveRaw(records);
+    state.editingId=null;
+    state.currentView='list';
+    render();
+    App.toast(wasEditing?'已更新':'保存成功');
+  }
+
+  function barChart(periods){
+    if(!periods.length) return '';
+    var W=320, barH=18, gap=10, padX=8, labelW=78;
+    var rowH=barH+gap;
+    var H=padX*2+rowH*periods.length;
+    var max=Math.max.apply(null, periods.map(function(p){return parseFloat(p.amount);}).concat([1]));
+    var bars='';
+    periods.forEach(function(p,i){
+      var v=parseFloat(p.amount);
+      var bw=Math.max(3,(v/max)*(W-labelW-10));
+      var y=padX+i*rowH;
+      bars+='<text x="0" y="'+(y+barH-5)+'" font-size="11" fill="#5b6b85">'+esc(p.label)+'</text>';
+      bars+='<rect x="'+labelW+'" y="'+y+'" width="'+(W-labelW-10)+'" height="'+barH+'" rx="4" fill="rgba(112,72,232,0.12)"/>';
+      bars+='<rect x="'+labelW+'" y="'+y+'" width="'+bw+'" height="'+barH+'" rx="4" fill="#7048e8"/>';
+      bars+='<text x="'+(labelW+bw+4)+'" y="'+(y+barH-5)+'" font-size="11" fill="#7048e8" font-weight="700">¥'+p.amount+'</text>';
+    });
+    return '<div class="c2-chart-wrap"><svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMinYMin meet" role="img" aria-label="各周期花费柱状图">'+bars+'</svg></div>';
+  }
+  function renderStats(){
+    var records=getEnriched();
+    var n=records.length;
+    if(n===0){ view.innerHTML='<div class="c2-empty"><div class="c2-empty-icon">📊</div><div class="c2-empty-text">暂无数据</div><div class="c2-empty-sub">先去添加几条充电记录吧</div></div>'; return; }
+    var mode=state.periodMode;
+    var sumAmt=0,sumKwh=0,sumMil=0,sumAdded=0,sumConsumed=0,sumConsumedMil=0,sumCost=0,costCount=0,sumRange=0,rangeCount=0;
+    var best=null,worst=null;
+    records.forEach(function(r){
+      sumAmt+=r.amount; sumKwh+=r.kwh; sumMil+=r.mileage; sumAdded+=r.addedPercent;
+      if(r.costPerKwh!==''&&!isNaN(parseFloat(r.costPerKwh))){ var c=parseFloat(r.costPerKwh); sumCost+=c; costCount++; if(best===null||c<best.costPerKwh) best=r; if(worst===null||c>worst.costPerKwh) worst=r; }
+      if(r.rangeAchievement!==''&&!isNaN(parseFloat(r.rangeAchievement))){ sumRange+=parseFloat(r.rangeAchievement); rangeCount++; }
+      if(r.consumedKwh!==''&&!isNaN(parseFloat(r.consumedKwh))&&parseFloat(r.mileage)>0){ sumConsumed+=parseFloat(r.consumedKwh); sumConsumedMil+=parseFloat(r.mileage); }
+    });
+    var periods=buildPeriodSummary(records, mode);
+    var overview='<div class="c2-grid">'
+      + '<div class="c2-grid-item"><span class="c2-g-num">'+n+'</span><span class="c2-g-label">总次数</span></div>'
+      + '<div class="c2-grid-item"><span class="c2-g-num">¥'+fmt(sumAmt)+'</span><span class="c2-g-label">累计花费(元)</span></div>'
+      + '<div class="c2-grid-item"><span class="c2-g-num">'+fmt(sumKwh)+'</span><span class="c2-g-label">累计度数(kWh)</span></div>'
+      + '<div class="c2-grid-item"><span class="c2-g-num">'+fmt(sumMil,1)+'</span><span class="c2-g-label">累计里程(km)</span></div>'
+      + '<div class="c2-grid-item"><span class="c2-g-num">¥'+fmt(sumMil>0?sumAmt/sumMil:0,3)+'</span><span class="c2-g-label">每公里成本(元)</span></div>'
+      + '<div class="c2-grid-item"><span class="c2-g-num">'+fmt(sumKwh>0?sumAmt/sumKwh:0)+'</span><span class="c2-g-label">每度电成本(元)</span></div>'
+      + '</div>';
+    var seg='<div class="c2-seg" id="c2-seg-mode">'
+      + '<div class="c2-seg-item '+(mode==='month'?'active':'')+'" data-mode="month">按月</div>'
+      + '<div class="c2-seg-item '+(mode==='year'?'active':'')+'" data-mode="year">按年</div></div>';
+    var periodBlock='<div class="c2-block"><span class="c2-block-title">'+(mode==='month'?'按月统计':'按年统计')+'</span>'
+      + (periods.length?barChart(periods):'<div class="c2-empty-sub">暂无记录</div>')
+      + periods.map(function(p){
+        return '<div class="c2-period"><div class="c2-period-head"><span class="c2-period-label">'+esc(p.label)+'</span><span class="c2-period-count">'+p.count+' 次</span></div>'
+        + '<div class="c2-period-grid"><div class="c2-pg"><span class="c2-pg-num">¥'+p.amount+'</span><span class="c2-pg-lab">花费</span></div>'
+        + '<div class="c2-pg"><span class="c2-pg-num">'+p.kwh+'</span><span class="c2-pg-lab">度数kWh</span></div>'
+        + '<div class="c2-pg"><span class="c2-pg-num">'+p.mileage+'</span><span class="c2-pg-lab">里程km</span></div></div>'
+        + '<div class="c2-period-foot"><span>每公里 <b class="c2-foot-hl">¥'+p.costPerKm+'</b></span>'
+        + '<span>每度电 <b class="c2-foot-hl">'+p.costPerKwh+' 元</b></span>'
+        + '<span>百公里 <b class="c2-foot-hl">'+p.kwhPer100+' kWh</b></span>'
+        + '<span>达成率 <b class="c2-foot-hl">'+p.rangeAchievement+'%</b></span></div></div>';
+      }).join('')+'</div>';
+    var coreBlock='<div class="c2-block"><span class="c2-block-title">核心指标</span>'
+      + '<div class="c2-metric-row"><span class="c2-m-label">平均每次补电量</span><span class="c2-m-value">+'+fmt(sumAdded/n,1)+'%</span></div>'
+      + '<div class="c2-metric-row"><span class="c2-m-label">平均续航达成率</span><span class="c2-m-value">'+(rangeCount>0?fmt(sumRange/rangeCount,1):'0.0')+'%</span></div>'
+      + '<div class="c2-metric-row"><span class="c2-m-label">平均百公里电耗</span><span class="c2-m-value">'+(sumConsumedMil>0?fmt(sumConsumed/sumConsumedMil*100):'0.00')+' kWh/100km</span></div>'
+      + '<div class="c2-metric-row"><span class="c2-m-label">总平均每公里成本</span><span class="c2-m-value">¥'+(sumMil>0?fmt(sumAmt/sumMil,3):'0.000')+'</span></div>'
+      + '<div class="c2-metric-row"><span class="c2-m-label">总平均每度电成本</span><span class="c2-m-value">'+(sumKwh>0?fmt(sumAmt/sumKwh):'0.00')+' 元/kWh</span></div></div>';
+    var bestBlock='<div class="c2-block"><span class="c2-block-title">最划算 / 最贵的一充</span>'
+      + (best?'<div class="c2-best"><span class="c2-tag good">最划算</span><div class="c2-b-info"><span class="c2-b-date">'+esc(best.date)+' · ¥'+best.amount+' · '+best.kwh+'kWh</span></div><span class="c2-b-cost">'+best.costPerKwh+' 元/kWh</span></div>':'')
+      + (worst?'<div class="c2-best"><span class="c2-tag bad">最贵</span><div class="c2-b-info"><span class="c2-b-date">'+esc(worst.date)+' · ¥'+worst.amount+' · '+worst.kwh+'kWh</span></div><span class="c2-b-cost">'+worst.costPerKwh+' 元/kWh</span></div>':'')
+      + '</div>';
+    view.innerHTML=overview+seg+periodBlock+coreBlock+bestBlock;
+    var segMode=$id('c2-seg-mode');
+    if(segMode) segMode.addEventListener('click',function(e){ var it=e.target.closest('[data-mode]'); if(!it) return; state.periodMode=it.dataset.mode; renderStats(); });
+  }
+
+  function render(){
+    if(state.currentView==='list') renderList();
+    else if(state.currentView==='stats') renderStats();
+    else if(state.currentView==='add') renderAdd();
+  }
+
+  function openModal(html){ modalRoot.innerHTML='<div class="c2-mask" id="c2-mask">'+html+'</div>'; var m=$id('c2-mask'); m.addEventListener('click',function(e){ if(e.target===m) closeModal(); }); }
+  function closeModal(){ modalRoot.innerHTML=''; }
+  function confirmDelete(id){
+    openModal('<div class="c2-modal"><span class="c2-modal-title">删除记录</span><span class="c2-modal-sub">确定要删除这条充电记录吗？</span>'
+      + '<div class="c2-modal-btns"><button class="c2-btn-cancel" id="c2-m-cancel">取消</button><button class="c2-btn-confirm" id="c2-m-ok" style="background:#e03131;color:#fff;">删除</button></div></div>');
+    $id('c2-m-cancel').onclick=closeModal;
+    $id('c2-m-ok').onclick=function(){ doDelete(id); closeModal(); };
+  }
+  function doDelete(id){
+    var records=loadRaw();
+    records=records.filter(function(r){return r.id!==id;});
+    enrichRecords(records);
+    saveRaw(records);
+    if(state.currentView==='list') render();
+    App.toast('已删除');
+  }
+
+  var HEADERS=['充电日期','充电前电量(%)','充电后电量(%)','本次补电量(%)','充电金额(元)','充电度数(kWh)','本次里程(km)','每公里成本(元/km)','每度电成本(元/kWh)','充电损耗(kWh)','充电渠道','续航达成率(%)','每1%公里数(km)','百公里电耗(kWh/100km)'];
+  var SUM_HEADERS=['周期','次数','花费(元)','度数(kWh)','里程(km)','每公里成本(元)','每度电成本(元/kWh)','百公里电耗(kWh/100km)','平均续航达成率(%)'];
+  function rowOf(r){ return [r.date,r.beforePercent,r.afterPercent,r.addedPercent,r.amount,r.kwh,r.mileage,r.costPerKm,r.costPerKwh,r.lossKwh,r.channel,r.rangeAchievement,r.kmPerPercent,r.kwhPer100]; }
+  function openExport(){
+    var all=loadRaw();
+    if(all.length===0){ App.toast('暂无记录可导出'); return; }
+    state.exportScope='all'; state.exportFormat='csv';
+    openModal('<div class="c2-modal"><span class="c2-modal-title">导出充电记录</span><span class="c2-modal-sub">选择导出范围与格式</span>'
+      + '<span class="c2-modal-section">导出范围</span><div class="c2-seg" id="c2-m-scope"><div class="c2-seg-item active" data-scope="all">全部</div><div class="c2-seg-item" data-scope="month">按月</div><div class="c2-seg-item" data-scope="year">按年</div></div>'
+      + '<span class="c2-modal-section">导出格式</span><div class="c2-seg" id="c2-m-format"><div class="c2-seg-item active" data-format="csv">CSV</div><div class="c2-seg-item" data-format="xls">Excel(.xls)</div></div>'
+      + '<div class="c2-modal-btns"><button class="c2-btn-cancel" id="c2-m-cancel">取消</button><button class="c2-btn-confirm" id="c2-m-ok">导出</button></div></div>');
+    $id('c2-m-cancel').onclick=closeModal;
+    $id('c2-m-scope').addEventListener('click',function(e){ var it=e.target.closest('[data-scope]'); if(!it)return; state.exportScope=it.dataset.scope; $id('c2-m-scope').querySelectorAll('.c2-seg-item').forEach(function(s){s.classList.toggle('active',s===it);}); });
+    $id('c2-m-format').addEventListener('click',function(e){ var it=e.target.closest('[data-format]'); if(!it)return; state.exportFormat=it.dataset.format; $id('c2-m-format').querySelectorAll('.c2-seg-item').forEach(function(s){s.classList.toggle('active',s===it);}); });
+    $id('c2-m-ok').onclick=confirmExport;
+  }
+  function confirmExport(){
+    var all=loadRaw();
+    var scope=state.exportScope, isCsv=state.exportFormat==='csv';
+    var detailRows=all.map(rowOf);
+    var sections, suffix='';
+    if(scope==='all'){ sections=[{title:'充电记录明细',headers:HEADERS,rows:detailRows}]; }
+    else {
+      var mode=scope==='month'?'month':'year';
+      var summary=buildPeriodSummary(all,mode);
+      var summaryRows=summary.map(function(s){return [s.label,s.count,s.amount,s.kwh,s.mileage,s.costPerKm,s.costPerKwh,s.kwhPer100,s.rangeAchievement];});
+      var title=mode==='month'?'充电记录汇总（按月）':'充电记录汇总（按年）';
+      sections=[{title:title,headers:SUM_HEADERS,rows:summaryRows},{title:'充电记录明细',headers:HEADERS,rows:detailRows}];
+      suffix=mode==='month'?'_按月':'_按年';
+    }
+    closeModal();
+    if(isCsv) exportCsv(sections,suffix); else exportXls(sections,suffix);
+  }
+  function exportCsv(sections,suffix){
+    function escape(v){ var s=String(v); if(s.indexOf(',')!==-1||s.indexOf('"')!==-1||s.indexOf('\n')!==-1) return '"'+s.replace(/"/g,'""')+'"'; return s; }
+    var lines=[];
+    sections.forEach(function(sec,idx){ if(idx>0) lines.push(''); if(sec.title) lines.push(sec.title); lines.push(sec.headers.join(',')); sec.rows.forEach(function(row){lines.push(row.map(escape).join(','));}); });
+    var csv='\uFEFF'+lines.join('\r\n');
+    downloadFile('充电记录'+suffix+'_'+formatToday()+'.csv', csv, 'text/csv;charset=utf-8');
+    App.toast('已导出 CSV');
+  }
+  function exportXls(sections,suffix){
+    var html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"></head><body>';
+    sections.forEach(function(sec){ if(sec.title) html+='<h3>'+sec.title+'</h3>'; html+='<table border="1">'; html+='<tr>'+sec.headers.map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr>'; sec.rows.forEach(function(row){ html+='<tr>'+row.map(function(c){return '<td>'+c+'</td>';}).join('')+'</tr>'; }); html+='</table><br>'; });
+    html+='</body></html>';
+    downloadFile('充电记录'+suffix+'_'+formatToday()+'.xls', html, 'application/vnd.ms-excel');
+    App.toast('已导出 Excel');
+  }
+
+  function openImportPicker(){ fileInput.value=''; fileInput.click(); }
+  fileInput.addEventListener('change',function(e){
+    var file=e.target.files&&e.target.files[0]; if(!file) return;
+    var reader=new FileReader();
+    reader.onload=function(){
+      try{
+        var parsed=parseBackup(reader.result);
+        if(!parsed.length){ openModal('<div class="c2-modal"><span class="c2-modal-title">导入失败</span><span class="c2-modal-sub">未能从文件中解析出有效的充电记录。</span><div class="c2-modal-btns"><button class="c2-btn-confirm" id="c2-m-ok">知道了</button></div></div>'); $id('c2-m-ok').onclick=closeModal; return; }
+        state.parsedImport=parsed;
+        openModal('<div class="c2-modal"><span class="c2-modal-title">导入备份数据</span><span class="c2-modal-sub">已从备份解析出 '+parsed.length+' 条记录</span>'
+          + '<span class="c2-modal-section">选择导入方式</span>'
+          + '<div class="c2-import-note">· 追加合并：加入现有记录，自动跳过重复项</div>'
+          + '<div class="c2-import-note">· 覆盖全部：用备份替换现有全部数据（建议先导出备份）</div>'
+          + '<div class="c2-modal-btns"><button class="c2-btn-cancel" id="c2-m-merge">追加合并</button><button class="c2-btn-confirm" id="c2-m-over" style="background:#e03131;color:#fff;">覆盖全部</button></div>'
+          + '<div class="c2-import-cancel" id="c2-m-cancel">取消</div></div>');
+        $id('c2-m-merge').onclick=function(){applyImport('merge');};
+        $id('c2-m-over').onclick=function(){applyImport('overwrite');};
+        $id('c2-m-cancel').onclick=closeModal;
+      }catch(err){
+        openModal('<div class="c2-modal"><span class="c2-modal-title">导入失败</span><span class="c2-modal-sub">文件无法识别：'+esc(err&&err.message?err.message:err)+'</span><div class="c2-modal-btns"><button class="c2-btn-confirm" id="c2-m-ok">知道了</button></div></div>'); $id('c2-m-ok').onclick=closeModal;
+      }
+    };
+    reader.onerror=function(){App.toast('读取文件失败');};
+    reader.readAsText(file,'utf-8');
+  });
+  function applyImport(mode){
+    var parsed=state.parsedImport||[];
+    if(!parsed.length){ closeModal(); return; }
+    var existing=loadRaw();
+    if(mode==='overwrite') existing=[];
+    function fp(r){ return [r.date,r.beforePercent,r.afterPercent,r.amount,r.kwh,r.mileage,r.channel||''].join('|'); }
+    var seen=new Set(existing.map(fp));
+    var added=0;
+    parsed.forEach(function(p){
+      var key=[p.date,p.beforePercent,p.afterPercent,p.amount,p.kwh,p.mileage,p.channel||''].join('|');
+      if(seen.has(key)) return;
+      seen.add(key);
+      existing.push({ id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), date:p.date, beforePercent:p.beforePercent, afterPercent:p.afterPercent, amount:p.amount, kwh:p.kwh, mileage:p.mileage, channel:p.channel, createTime:Date.now() });
+      added++;
+    });
+    enrichRecords(existing);
+    saveRaw(existing);
+    state.parsedImport=null;
+    closeModal();
+    if(state.currentView==='list') render();
+    App.toast('已导入 '+added+' 条');
+  }
+
+  view.addEventListener('click',function(e){
+    var act=e.target.closest('[data-act]');
+    if(act){ var id=act.dataset.id; if(act.dataset.act==='edit'){ state.editingId=id; state.currentView='add'; render(); } else if(act.dataset.act==='del'){ confirmDelete(id); } }
+  });
+
+  /* ---------- 注册模块 ---------- */
+  App.register('charge2', {
+    name: '元UP充电',
+    icon: '🔌',
+    color: '#7048e8',
+    soft: 'var(--purple-soft)',
+    desc: '充电花费·度数·里程·每公里成本',
+    hTip: '充电账本 · 数据仅存本机',
+    tabs: [
+      { k: 'list', icon: '📋', label: '列表' },
+      { k: 'stats', icon: '📊', label: '统计' },
+      { k: 'add', icon: '➕', label: '记一笔' }
+    ],
+    init() { render(); },
+    onTab(k) { if(k==='add') state.editingId=null; state.currentView=k; render(); },
+    onShow() { render(); },
+    homeMeta() {
+      var recs = loadRaw();
+      if(!recs.length) return '暂无记录';
+      var amt = recs.reduce(function(s,r){return s+(parseFloat(r.amount)||0);},0);
+      var mil = recs.reduce(function(s,r){return s+(parseFloat(r.mileage)||0);},0);
+      return '<b>'+recs.length+'</b> 次 · 花费 <b>¥'+amt.toFixed(0)+'</b>'+(mil>0?' · <b>¥'+(amt/mil).toFixed(2)+'</b>/km':'');
+    }
+  });
+})();
+</script>
+
+<script>
+/* ============================================================
    模块：记账本（移植自「记账本-本地版」小程序，localStorage: wu_ledger_v1）
    ============================================================ */
 
@@ -8353,13 +8974,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ---------- 记账本纳入总备份 ---------- */
   App.BACKUP_KEYS.ledger = ['wu_ledger_v1'];
+  App.BACKUP_KEYS.charge2 = ['charge_records'];
   App.MOD_LABEL = {
     ledger: '记账本', flow: '医院流向', output: '客户产出', daily: '日均账本',
-    energy: '元UP能耗', sentry: '哨兵耗电', charge: '充电日历', poop: '排便日历', period: '经期助手'
+    energy: '元UP能耗', sentry: '哨兵耗电', charge: '充电日历', poop: '排便日历', period: '经期助手', charge2: '元UP充电'
   };
   App.MOD_ICON = {
     ledger: '💰', flow: '🏥', output: '📊', daily: '💜', energy: '🚗',
-    sentry: '📹', charge: '🔋', poop: '🚽', period: '🌸'
+    sentry: '📹', charge: '🔋', poop: '🚽', period: '🌸', charge2: '🔌'
   };
   App.LS_LAST = 'record-center-last-backup';
   App.LS_LOG = 'record-center-backup-log';
@@ -8603,6 +9225,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tipEl) tipEl.textContent = ago ? (ago + '备份过') : '尚未备份';
   };
 
+  App.getOrder = function () {
+    try {
+      const arr = JSON.parse(localStorage.getItem('rc_tool_order') || 'null');
+      if (Array.isArray(arr) && arr.length === App.order.length && arr.every(id => App.mods[id])) return arr;
+    } catch (e) {}
+    return App.order.slice();
+  };
+  App.saveOrder = function (arr) { try { localStorage.setItem('rc_tool_order', JSON.stringify(arr)); } catch (e) {} };
+  App.moveTool = function (id, dir) {
+    const arr = App.getOrder(); const i = arr.indexOf(id); const j = i + dir;
+    if (i < 0 || j < 0 || j >= arr.length) return;
+    const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    App.saveOrder(arr); App.renderHome(); App.renderMe();
+  };
+  App.resetOrder = function () { localStorage.removeItem('rc_tool_order'); App.renderHome(); App.renderMe(); };
+
   App.renderHome = function () {
     const t = new Date();
     App.$('homeToday').textContent = t.getFullYear() + '年' + (t.getMonth() + 1) + '月' + t.getDate() + '日';
@@ -8623,7 +9261,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /* 工具宫格 */
     const grid = App.$('homeGrid');
     grid.innerHTML = '';
-    App.order.forEach(id => {
+    App.getOrder().forEach(id => {
       const m = App.mods[id];
       const card = document.createElement('button');
       card.className = 'mod-card';
@@ -8718,11 +9356,25 @@ document.addEventListener('DOMContentLoaded', () => {
       b.addEventListener('click', () => App.activate(id));
       chips.appendChild(b);
     });
+    const ol = App.$('meOrderList');
+    if (ol) {
+      ol.innerHTML = '';
+      const order = App.getOrder();
+      order.forEach((id, idx) => {
+        const m = App.mods[id];
+        const row = document.createElement('div');
+        row.className = 'order-row';
+        row.innerHTML = '<span class="order-name">' + m.icon + ' ' + m.name + '</span>' +
+          '<span class="order-btns"><button ' + (idx === 0 ? 'disabled' : '') + ' data-move="' + id + ':up">↑</button>' +
+          '<button ' + (idx === order.length - 1 ? 'disabled' : '') + ' data-move="' + id + ':down">↓</button></span>';
+        ol.appendChild(row);
+      });
+    }
   };
 
   /* ---------- 注册「备份」「我的」两个页面 ---------- */
   App.register('backup', { name: '备份与恢复', icon: '💾', color: '#1f7a5c', soft: 'var(--blue-soft)', desc: '', hTip: '备份 · 恢复 · 数据概览', tabs: [], init() { }, onShow() { App.renderBackupPage(); } });
-  App.register('me', { name: '我的', icon: '👤', color: '#7048e8', soft: 'var(--purple-soft)', desc: '', hTip: '存储与说明', tabs: [], init() { }, onShow() { App.renderMe(); } });
+  App.register('me', { name: '我的', icon: '👤', color: '#7048e8', soft: 'var(--purple-soft)', desc: '', hTip: '存储与说明', tabs: [], init() { const ol = App.$('meOrderList'); if (ol) ol.addEventListener('click', function(e){ const btn = e.target.closest('[data-move]'); if(!btn) return; const p = btn.dataset.move.split(':'); App.moveTool(p[0], p[1] === 'up' ? -1 : 1); }); const rs = App.$('meOrderReset'); if (rs) rs.addEventListener('click', App.resetOrder); }, onShow() { App.renderMe(); } });
   /* 这两个页面不出现在首页工具宫格里 */
   App.order = App.order.filter(id => id !== 'backup' && id !== 'me');
 
