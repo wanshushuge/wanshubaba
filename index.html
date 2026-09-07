@@ -254,6 +254,7 @@ details.fold .fbody{padding:0 15px 14px}
 .hospName b{font-size:12px;color:var(--blue);white-space:nowrap;font-variant-numeric:tabular-nums}
 .monthGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
 .yearGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:5px}
+.quarterGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
 .cell{background:#f7f9fc;border-radius:6px;padding:5px 2px;text-align:center;min-width:0}
 .cell .ml{display:block;font-size:9px;color:var(--sub);line-height:1.4}
 .cell .vl{display:block;font-size:11px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;word-break:break-all;line-height:1.4}
@@ -1649,6 +1650,8 @@ details.fold .fbody{padding:0 16px 16px}
     </div>
     <div data-page-node-id="asE4fCgdjdKTiJLnnjYUfb" class="sectionTitle"><!--pnid:dujveeC3Q7blI1yAXQutib-->按月汇总<small data-page-node-id="qvMrOvURsMgIs8od09uNil"><!--pnid:EdM2TEkD0AcuF81eECN2BS-->每家医院一行，12 个月完整展开</small></div>
     <div data-page-node-id="8TqWvFzsmEtUYKBSif1RUq" id="monthTableWrap"></div>
+    <div class="sectionTitle">按季度汇总<small>每家医院一行，4 个季度展开</small></div>
+    <div id="quarterTableWrap"></div>
     <div data-page-node-id="p8KT91beAnWvdYI5rDc1jR" class="sectionTitle"><!--pnid:ZIqWsrku6woWeIt48mzI2N-->按年汇总<small data-page-node-id="Ae739Ax5thuwmtWBzZeZQw"><!--pnid:Gsm0TVNPXW4vvYwZyLhkKQ-->每家医院一行，历年数据完整展开</small></div>
     <div data-page-node-id="tTYJ2y73Yf2ht1C9PCTt2U" id="yearTableWrap"></div>
   </div>
@@ -2981,7 +2984,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
   function buildAgg() {
-    const hospMonth = {}, hospYear = {}, monthTotal = {}, yearTotal = {}, hospTotal = {};
+    const hospMonth = {}, hospYear = {}, hospQuarter = {}, monthTotal = {}, yearTotal = {}, quarterTotal = {}, hospTotal = {};
     let grand = 0;
     for (const r of records) {
       if (!r.hospital || !r.date) continue;
@@ -2990,10 +2993,13 @@ document.addEventListener('DOMContentLoaded', () => {
       (hospYear[r.hospital] = hospYear[r.hospital] || {})[y] = ((hospYear[r.hospital][y]) || 0) + r.quantity;
       monthTotal[m] = (monthTotal[m] || 0) + r.quantity;
       yearTotal[y] = (yearTotal[y] || 0) + r.quantity;
+      const q = Math.floor((Number(r.date.slice(5, 7)) - 1) / 3) + 1, qk = y + '-Q' + q;
+      (hospQuarter[r.hospital] = hospQuarter[r.hospital] || {})[qk] = ((hospQuarter[r.hospital][qk]) || 0) + r.quantity;
+      quarterTotal[qk] = (quarterTotal[qk] || 0) + r.quantity;
       hospTotal[r.hospital] = (hospTotal[r.hospital] || 0) + r.quantity;
       grand += r.quantity;
     }
-    return { hospMonth, hospYear, monthTotal, yearTotal, hospTotal, grand };
+    return { hospMonth, hospYear, hospQuarter, monthTotal, yearTotal, quarterTotal, hospTotal, grand };
   }
   function sortedHosps(agg) { return Object.keys(agg.hospTotal).sort((a, b) => agg.hospTotal[b] - agg.hospTotal[a]); }
   function sortedYears(agg) { return Object.keys(agg.yearTotal).sort(); }
@@ -3106,6 +3112,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const years = sortedYears(agg);
     if (!records.length) {
       $('monthTableWrap').innerHTML = '<div class="emptyTip">暂无数据</div>';
+      $('quarterTableWrap').innerHTML = '<div class="emptyTip">暂无数据</div>';
       $('yearTableWrap').innerHTML = '<div class="emptyTip">暂无数据</div>';
       $('aggYearLabel').textContent = aggYear + '年';
       return;
@@ -3130,6 +3137,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     h += '<div class="hospRow totalRowBlock"><div class="hospName"><span>所有医院合计</span><b>' + aggYear + '年合计 ' + fmtQty(g) + '</b></div><div class="monthGrid">' + cellsT + '</div></div>';
     $('monthTableWrap').innerHTML = h;
+    let hq = '';
+    for (const hosp of hosps) {
+      let qsum = 0, cells = '';
+      for (let q = 1; q <= 4; q++) {
+        const qk = aggYear + '-Q' + q;
+        const v = (agg.hospQuarter[hosp] && agg.hospQuarter[hosp][qk]) || 0; qsum += v;
+        cells += '<div class="cell' + (v ? ' has' : '') + '"><span class="ml">Q' + q + '季</span><span class="vl">' + (v ? fmtQty(v) : '-') + '</span></div>';
+      }
+      hq += '<div class="hospRow"><div class="hospName"><span>' + escapeHtml(hosp) + '</span><b>' + aggYear + '年合计 ' + fmtQty(qsum) + '</b></div><div class="quarterGrid">' + cells + '</div></div>';
+    }
+    let cellsTq = '', gq = 0;
+    for (let q = 1; q <= 4; q++) {
+      const qk = aggYear + '-Q' + q;
+      const v = agg.quarterTotal[qk] || 0; gq += v;
+      cellsTq += '<div class="cell' + (v ? ' has' : '') + '"><span class="ml">Q' + q + '季</span><span class="vl">' + (v ? fmtQty(v) : '-') + '</span></div>';
+    }
+    hq += '<div class="hospRow totalRowBlock"><div class="hospName"><span>所有医院合计</span><b>' + aggYear + '年合计 ' + fmtQty(gq) + '</b></div><div class="quarterGrid">' + cellsTq + '</div></div>';
+    $('quarterTableWrap').innerHTML = hq;
     let h2 = '';
     for (const hosp of hosps) {
       let cells = '';
