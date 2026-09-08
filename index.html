@@ -1317,7 +1317,7 @@ details.fold .fbody{padding:0 16px 16px}
 <section class="view on" id="view-home">
   <div class="home-hero">
     <h1>📋 记录中心</h1>
-    <p>9 个工具 · 一本通 · 数据全部只存在这台设备的浏览器里</p>
+    <p>10 个工具 · 一本通 · 数据全部只存在这台设备的浏览器里</p>
     <div class="hpill">📅 <span id="homeToday"></span> · <span id="homeBackupTip">尚未备份</span></div>
   </div>
 
@@ -1343,7 +1343,7 @@ details.fold .fbody{padding:0 16px 16px}
 <!-- ================= 备份恢复中心（新增） ================= -->
 <section class="view" id="view-backup">
   <div class="card">
-    <h3>📦 全量备份 <span class="tag">9 个工具一起打包</span></h3>
+    <h3>📦 全量备份 <span class="tag">10 个工具一起打包</span></h3>
     <p class="muted" style="line-height:1.8">导出一个 JSON 文件。手机上如果下不下来，用「复制备份文本」粘到微信文件传输助手 / 备忘录里保存，之后用「粘贴文本恢复」粘回来也可以。</p>
     <div class="actions">
       <button class="btn" id="bkAll">⬇ 导出全量备份</button>
@@ -1407,7 +1407,7 @@ details.fold .fbody{padding:0 16px 16px}
         <button class="btn-ghost btn" id="btnGoBackupCenter">🛠 备份中心</button>
       </div>
       <input accept=".json" class="hidden" id="allRestoreFile" type="file">
-      <p class="muted" style="margin-top:10px; line-height:1.8">备份打包全部 9 个工具的记录与设置，恢复时可选「合并」或「覆盖」。</p>
+      <p class="muted" style="margin-top:10px; line-height:1.8">备份打包全部 10 个工具的记录与设置，恢复时可选「合并」或「覆盖」。</p>
     </div>
   </details>
 
@@ -1449,7 +1449,7 @@ details.fold .fbody{padding:0 16px 16px}
     <h3>ℹ️ 关于</h3>
     <p class="muted" style="line-height:1.9">
       记录中心 v2 · 生活工作一本通<br>
-      集成工具：记账本、医院流向、客户产出、日均账本、元UP能耗、哨兵耗电、充电日历、排便日历、经期助手<br>
+      集成工具：记账本、医院流向、客户产出、日均账本、元UP能耗、元UP充电账本、哨兵耗电、充电日历、排便日历、经期助手<br>
       全部数据只写本机，不发往任何服务器
     </p>
   </div>
@@ -2893,7 +2893,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function pad2(n) { return String(n).padStart(2, '0'); }
   function todayStr() { const d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
   function fmtQty(q) { const v = Math.round(q * 100) / 100; return v.toLocaleString('zh-CN', { maximumFractionDigits: 2 }); }
-  function uid() { return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  let _uidSeq = 0;
+  function uid() { return 'r' + Date.now().toString(36) + (++_uidSeq).toString(36) + Math.random().toString(36).slice(2, 7); }
   function toast(t) { App.toast(t); }
 
   /* ================= 应用内弹窗 ================= */
@@ -2961,7 +2962,7 @@ document.addEventListener('DOMContentLoaded', () => {
               id: o.id,
               hospital: String(o.hospital != null ? o.hospital : (o.hosp != null ? o.hosp : '')),
               date: o.date || '',
-              quantity: Number(o.quantity != null ? o.quantity : (o.qty != null ? o.qty : 0)),
+              quantity: Number(o.quantity != null ? o.quantity : (o.qty != null ? o.qty : 0)) || 0,
               note: '',
               created: Number(o.created != null ? o.created : (o.ts != null ? o.ts : Date.now()))
             });
@@ -3578,7 +3579,8 @@ document.addEventListener('DOMContentLoaded', () => {
     return { hospitals: [], customers: [], records: [] };
   }
   function save() { localStorage.setItem(KEY, JSON.stringify(DB)); }
-  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  let _uidSeq = 0;
+  function uid() { return Date.now().toString(36) + (++_uidSeq).toString(36) + Math.random().toString(36).slice(2, 7); }
   function toast(msg) { App.toast(msg); }
   function hosName(id) { const h = DB.hospitals.find(x => x.id === id); return h ? h.name : '—'; }
   function custName(id) { const c = DB.customers.find(x => x.id === id); return c ? c.name : '—'; }
@@ -4019,18 +4021,20 @@ document.addEventListener('DOMContentLoaded', () => {
     $('bk-file').onchange = e => {
       const f = e.target.files[0]; if (!f) return;
       const rd = new FileReader();
-      rd.onload = () => {
+      rd.onload = async () => {
         try {
           const d = JSON.parse(rd.result);
-          if (!d.hospitals || !d.customers || !d.records) throw 0;
-          if (!confirm('导入将覆盖当前所有数据，确定继续？')) return;
+          if (!d || !Array.isArray(d.hospitals) || !Array.isArray(d.customers) || !Array.isArray(d.records)) throw 0;
+          const ok = await App.ask({ title: '导入确认', msg: '导入将覆盖当前所有数据，确定继续？', buttons: [{ text: '取消', cls: 'askCancel', value: false }, { text: '确定导入', cls: 'askPrimary', value: true }] });
+          if (!ok) return;
           DB = d; save(); toast('导入成功 ✓'); reload(); renderBackup();
         } catch (err) { toast('文件格式错误'); }
       };
       rd.readAsText(f);
     };
-    $('bk-reset').onclick = () => {
-      if (!confirm('确定清空全部医院、客户和记录？此操作不可恢复！')) return;
+    $('bk-reset').onclick = async () => {
+      const ok = await App.ask({ title: '清空确认', msg: '确定清空全部医院、客户和记录？此操作不可恢复！', buttons: [{ text: '取消', cls: 'askCancel', value: false }, { text: '确定清空', cls: 'askDanger', value: true }] });
+      if (!ok) return;
       DB = { hospitals: [], customers: [], records: [] }; save(); toast('已清空'); reload(); renderBackup();
     };
     $('bk-export-xlsx').onclick = () => {
@@ -4083,7 +4087,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let items = [], settings = { sort: 'daily' }, filter = 'all', searchQ = '', editingId = null, lastDayKey = '';
 
   /* ---------- 工具 ---------- */
-  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  let _uidSeq = 0;
+  function uid() { return Date.now().toString(36) + (++_uidSeq).toString(36) + Math.random().toString(36).slice(2, 7); }
   function pad(n) { return String(n).padStart(2, '0'); }
   function toISO(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
   function parseISO(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
@@ -4543,7 +4548,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const LAST_REMIND_KEY = 'yuanup_last_remind_v1';
 
   /* ---------- 工具 ---------- */
-  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  let _uidSeq = 0;
+  function uid() { return Date.now().toString(36) + (++_uidSeq).toString(36) + Math.random().toString(36).slice(2, 7); }
   function fmt(n, d = 1) { return Number(n).toFixed(d); }
   function todayStr() {
     const n = new Date();
@@ -4707,13 +4713,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const age = next.fromDate ? Math.round((Date.now() - new Date(next.fromDate).getTime()) / 86400000) : null;
         const ageText = age === 0 ? '今天' : (age === 1 ? '昨天' : (age != null ? `${age}天前` : ''));
         const todayRecords = loadRecords().filter(r => r.date === today && r.endMileage);
-        const lastMileage = todayRecords.length > 0
-          ? Math.max(...todayRecords.map(r => r.endMileage))
-          : (next.mileage || 0);
-        const prefillMileage = todayRecords.length > 0 ? lastMileage + 1 : (next.mileage || '');
-        const prefillSoc = todayRecords.length > 0
-          ? Math.max(...todayRecords.map(r => r.endSoc))
-          : next.soc;
+        const lastRec = todayRecords.length > 0
+          ? todayRecords.slice().sort((a, b) => (b.endMileage || 0) - (a.endMileage || 0))[0]
+          : null;
+        const prefillMileage = lastRec ? lastRec.endMileage : (next.mileage || '');
+        const prefillSoc = lastRec ? lastRec.endSoc : next.soc;
         startSocInput.value = prefillSoc;
         startMiInput.value = prefillMileage || '';
         hint.className = 'form-mode-hint ok';
@@ -4931,14 +4935,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (todayRecs.length === 0) { wrap.style.display = 'none'; return; }
     wrap.style.display = '';
     todayRecs.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-    const closedRecs = todayRecs.filter(r => r.status === 'closed');
+    const closedRecs = todayRecs.filter(r => r.endSoc != null && !isNaN(r.endSoc));
     const totalKm = closedRecs.reduce((s, r) => s + ((r.endMileage || 0) - (r.startMileage || 0)), 0);
-    const totalKwh = closedRecs.reduce((s, r) => s + ((r.startSoc - r.endSoc) / 100 * 45.12), 0);
+    const totalKwh = closedRecs.reduce((s, r) => s + ((r.startSoc - r.endSoc) / 100 * (loadSettings().batteryCapacity || 45.12)), 0);
     meta.textContent = `${todayRecs.length} 段 · ${totalKm} km · ${fmt(totalKwh, 1)} kWh`;
     items.innerHTML = todayRecs.map((r, idx) => {
       const isOpen = r.status === 'open';
       const km = r.startMileage && r.endMileage ? r.endMileage - r.startMileage : 0;
-      const kwh = r.endSoc != null ? (r.startSoc - r.endSoc) / 100 * 45.12 : 0;
+      const kwh = r.endSoc != null ? (r.startSoc - r.endSoc) / 100 * (loadSettings().batteryCapacity || 45.12) : 0;
       const per100 = km > 0 ? kwh / km * 100 : 0;
       return `<div class="open-item" data-id="${r.id}">
       <div class="open-item-title">${idx + 1}. ${r.tripName || '行程'} ${isOpen ? '<span class="badge yellow">⏳ 待结束</span>' : `<span class="badge green">${km}km</span>`}</div>
@@ -5278,13 +5282,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const cap = s.batteryCapacity || 45.12;
     const range = s.ratedRange || 401;
     const today = todayStr();
+    const isClosed = r => r.endSoc != null && !isNaN(r.endSoc);
 
-    const totalKwh = drives.reduce((sum, r) => sum + (r.startSoc - r.endSoc) / 100 * cap, 0);
-    const totalKm = drives.reduce((sum, r) => sum + (r.endMileage && r.startMileage ? r.endMileage - r.startMileage : 0), 0);
+    const closedDrives = drives.filter(isClosed);
+    const totalKwh = closedDrives.reduce((sum, r) => sum + (r.startSoc - r.endSoc) / 100 * cap, 0);
+    const totalKm = closedDrives.reduce((sum, r) => sum + ((r.endMileage || 0) - (r.startMileage || 0)), 0);
     const avgPer100 = totalKm > 0 ? totalKwh / totalKm * 100 : 0;
 
     const todayDrives = drives.filter(r => r.date === today);
-    const todayClosed = todayDrives.filter(r => r.status === 'closed');
+    const todayClosed = todayDrives.filter(isClosed);
     const todayKm = todayClosed.reduce((s2, r) => s2 + ((r.endMileage || 0) - (r.startMileage || 0)), 0);
     const todayKwh = todayClosed.reduce((s2, r) => s2 + ((r.startSoc - r.endSoc) / 100 * cap), 0);
     const todayPer100 = todayKm > 0 ? todayKwh / todayKm * 100 : 0;
@@ -5404,7 +5410,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const nightLabelMap = { sentry: '📹 哨兵模式', disinfect: '🔥 高温消毒', ac_pre: '❄️ 空调预约', other: '其他', none: '无耗电' };
     const nightGroups = {};
     let totalNightDrain = 0, nightCount = 0;
-    drives.filter(r => r.status === 'closed' && r.nightDrain > 0).forEach(r => {
+    drives.filter(r => isClosed(r) && r.nightDrain > 0).forEach(r => {
       const k = r.nightMode || 'other';
       if (!nightGroups[k]) nightGroups[k] = { sum: 0, count: 0 };
       nightGroups[k].sum += r.nightDrain;
@@ -5442,7 +5448,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* 日耗电趋势 */
     const dailyMap = {};
-    drives.forEach(r => {
+    closedDrives.forEach(r => {
       const kwh = (r.startSoc - r.endSoc) / 100 * cap;
       const km = r.endMileage && r.startMileage ? r.endMileage - r.startMileage : 0;
       if (!dailyMap[r.date]) dailyMap[r.date] = { kwh: 0, km: 0 };
@@ -5519,7 +5525,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* 驾驶 vs 夜间耗电占比 */
     let driveKwh = 0, nightKwh = 0;
-    drives.filter(r => r.status === 'closed').forEach(r => {
+    drives.filter(r => isClosed(r)).forEach(r => {
       driveKwh += (r.startSoc - r.endSoc) / 100 * cap;
       nightKwh += (r.nightDrain || 0) / 100 * cap;
     });
@@ -6196,7 +6202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (r.onTime && r.offTime) {
       let a = new Date(r.onTime).getTime(), b = new Date(r.offTime).getTime();
       if (isNaN(a) || isNaN(b)) return 0;
-      if (b <= a) b += 24 * 3600 * 1000;
+      while (b <= a) b += 24 * 3600 * 1000;  // 跨午夜或多日守护都正确累加
       return (b - a) / 3600000;
     }
     return 0;
@@ -6974,11 +6980,11 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (dow === 0 || dow === 6) { cls += ' weekend'; ico = '🌿'; }
       else { ico = '·'; }
       if (k < TODAY) cls += ' past';
-      if (isCharged(k) && k >= TODAY) cls += ' charged';
+      if (isCharged(k)) cls += ' charged';
       if (k === TODAY) cls += ' today';
       const adv = (t === 'holiday' ? PLAIN_ADVICE.holiday(name) : t === 'tune' ? PLAIN_ADVICE.tune() : t === 'weekend' ? PLAIN_ADVICE.weekend() : PLAIN_ADVICE.work());
       const title = `${Y}-${pad(m)}-${pad(d)} 星期${WK[dow]}${name ? ' · ' + name : ''}\n${adv}`;
-      html += `<div class="${cls}" data-k="${k}" title="${title.replace(/"/g, '&quot;')}">${d}<span class="ico">${ico}</span>${isCharged(k) && k >= TODAY ? '<span class="cb">💩</span>' : ''}</div>`;
+      html += `<div class="${cls}" data-k="${k}" title="${title.replace(/"/g, '&quot;')}">${d}<span class="ico">${ico}</span>${isCharged(k) ? '<span class="cb">💩</span>' : ''}</div>`;
     }
     $('p-days').innerHTML = html;
   }
@@ -6999,7 +7005,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderMonth(currentMonth);
       $('p-days').addEventListener('click', e => {
         const day = e.target.closest('.day');
-        if (day && !day.classList.contains('dim') && !day.classList.contains('past')) {
+        if (day && !day.classList.contains('dim')) {
           const k = day.dataset.k;
           setCharged(k, !isCharged(k));
           day.classList.toggle('charged', isCharged(k));
@@ -7036,7 +7042,7 @@ document.addEventListener('DOMContentLoaded', () => {
    模块：经期助手（原 index.html）
    localStorage: menstrual_records_v1（与原版一致，旧数据自动沿用）
    功能：记录经期、平均周期/经期统计、下一次预测、
-   日历（周日为首：经期粉/预测橙/今天框）、历史管理、导出
+   日历（周一为首：经期粉/预测橙/今天框）、历史管理、导出
    ============================================================ */
 (function () {
   'use strict';
@@ -7045,6 +7051,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   var KEY = 'menstrual_records_v1';
   var DEFAULT_CYCLE = 28, DEFAULT_DUR = 5;
+  var _pSeq = 0;
+  function genId() {
+    return 'p' + Date.now().toString(36) + (++_pSeq).toString(36) + Math.random().toString(36).slice(2, 7);
+  }
 
   /* ---------- 工具函数 ---------- */
   function load() {
@@ -7052,7 +7062,8 @@ document.addEventListener('DOMContentLoaded', () => {
     catch (e) { return []; }
   }
   function save(arr) {
-    localStorage.setItem(KEY, JSON.stringify(arr));
+    try { localStorage.setItem(KEY, JSON.stringify(arr)); }
+    catch (e) { App.toast('保存失败：本地存储空间不足'); }
   }
   function todayMid() {
     var d = new Date();
@@ -7179,13 +7190,13 @@ document.addEventListener('DOMContentLoaded', () => {
     $('m-monthLabel').textContent = viewYear + '年' + (viewMonth + 1) + '月';
     var grid = $('m-calGrid');
     grid.innerHTML = '';
-    var wds = ['日', '一', '二', '三', '四', '五', '六'];
+    var wds = ['一', '二', '三', '四', '五', '六', '日'];
     wds.forEach(function (w) {
       var c = document.createElement('div');
       c.className = 'wd'; c.textContent = w; grid.appendChild(c);
     });
     var firstDay = new Date(viewYear, viewMonth, 1);
-    var startW = firstDay.getDay();
+    var startW = (firstDay.getDay() + 6) % 7; // 周一为首
     var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
     var pSet = periodDateSet(records);
     var prSet = predictedDateSet(predictions);
@@ -7244,7 +7255,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ---------- 操作 ---------- */
   function addRecord(start, end) {
     var records = load();
-    records.push({ id: Date.now() + '' + Math.floor(Math.random() * 1000), start: start, end: end });
+    records.push({ id: genId(), start: start, end: end });
     save(records);
     renderAll();
     App.toast('已保存 ✓');
@@ -7305,12 +7316,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (toMid(e) < toMid(s)) { App.toast('结束日期不能早于开始日期'); return; }
         addRecord(s, e);
-        $('m-startDate').value = t;
-        $('m-endDate').value = t;
+        var tNow = fmt(todayMid());
+        $('m-startDate').value = tNow;
+        $('m-endDate').value = tNow;
       });
       $('m-todayBtn').addEventListener('click', function () {
         var st = computeStats(load());
-        addRecord(t, fmt(addDays(todayMid(), st.avgDur - 1)));
+        addRecord(fmt(todayMid()), fmt(addDays(todayMid(), st.avgDur - 1)));
       });
       $('m-prevM').addEventListener('click', function () {
         viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } renderAll();
@@ -7376,10 +7388,10 @@ document.addEventListener('DOMContentLoaded', () => {
       var key = 'ev_charged_records';
       var charged = JSON.parse(localStorage.getItem(key) || '{}') || {};
       if(mark){
-        charged[date] = 1;
+        charged[date] = { src: 'charge2' };
       } else {
-        var still = loadRaw().some(function(r){ return r.date === date; });
-        if(!still) delete charged[date];
+        var v = charged[date];
+        if(v && typeof v === 'object' && v.src === 'charge2') delete charged[date];
       }
       localStorage.setItem(key, JSON.stringify(charged));
     }catch(e){}
@@ -7394,6 +7406,7 @@ document.addEventListener('DOMContentLoaded', () => {
       r.costPerKwh = kwh>0 ? parseFloat((amt/kwh).toFixed(2)) : '';
       var theoretical = BATTERY_CAPACITY*(a-b)/100;
       r.lossKwh = parseFloat((kwh-theoretical).toFixed(2));
+      r.addedPercent = parseFloat((a - b).toFixed(1));   /* 保证导入/旧数据也有本次补电量，避免卡片 +undefined% 与统计 NaN */
       r.consumedKwh=''; r.kwhPer100=''; r.costPerKm='';
     });
     var sorted = records.slice().sort(function(x,y){
@@ -7625,8 +7638,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if(!date){ App.toast('请选择充电日期'); return; }
     if(isNaN(b)||b<0||b>100){ App.toast('充电前电量需在 0-100'); return; }
     if(isNaN(a)||a<0||a>100){ App.toast('充电后电量需在 0-100'); return; }
+    if(a < b){ App.toast('充电后电量应不小于充电前电量'); return; }
     if(isNaN(amt)||amt<0){ App.toast('请输入有效金额'); return; }
-    if(isNaN(k)||k<0){ App.toast('请输入有效度数'); return; }
+    if(isNaN(k)||k<=0){ App.toast('请输入有效度数'); return; }
     if(isNaN(m)||m<=0){ App.toast('里程需大于 0'); return; }
     var addedPercent=parseFloat((a-b).toFixed(1));
     var record={ id:state.editingId||(Date.now().toString(36)+Math.random().toString(36).slice(2,6)),
@@ -7784,7 +7798,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function exportXls(sections,suffix){
     var html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"></head><body>';
-    sections.forEach(function(sec){ if(sec.title) html+='<h3>'+sec.title+'</h3>'; html+='<table border="1">'; html+='<tr>'+sec.headers.map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr>'; sec.rows.forEach(function(row){ html+='<tr>'+row.map(function(c){return '<td>'+c+'</td>';}).join('')+'</tr>'; }); html+='</table><br>'; });
+    sections.forEach(function(sec){ if(sec.title) html+='<h3>'+esc(sec.title)+'</h3>'; html+='<table border="1">'; html+='<tr>'+sec.headers.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+'</tr>'; sec.rows.forEach(function(row){ html+='<tr>'+row.map(function(c){return '<td>'+esc(c)+'</td>';}).join('')+'</tr>'; }); html+='</table><br>'; });
     html+='</body></html>';
     downloadFile('充电记录'+suffix+'_'+formatToday()+'.xls', html, 'application/vnd.ms-excel');
     App.toast('已导出 Excel');
@@ -7819,7 +7833,10 @@ document.addEventListener('DOMContentLoaded', () => {
     var parsed=state.parsedImport||[];
     if(!parsed.length){ closeModal(); return; }
     var existing=loadRaw();
-    if(mode==='overwrite') existing=[];
+    if(mode==='overwrite'){
+      existing=[];
+      try{ var ck='ev_charged_records'; var ch=JSON.parse(localStorage.getItem(ck)||'{}')||{}; Object.keys(ch).forEach(function(d){ if(ch[d]&&typeof ch[d]==='object'&&ch[d].src==='charge2') delete ch[d]; }); localStorage.setItem(ck, JSON.stringify(ch)); }catch(e){}
+    }
     function fp(r){ return [r.date,r.beforePercent,r.afterPercent,r.amount,r.kwh,r.mileage,r.channel||''].join('|'); }
     var seen=new Set(existing.map(fp));
     var added=0;
@@ -7942,7 +7959,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function parseD(s) { var a = s.split('-'); return new Date(+a[0], +a[1] - 1, +a[2]); }
   function todayStr() { return toStr(new Date()); }
   function nowKey() { return new Date().getTime(); }
-  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  let _uidSeq = 0;
+  function uid() { return Date.now().toString(36) + (++_uidSeq).toString(36) + Math.random().toString(36).slice(2, 7); }
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -8420,7 +8438,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '<div class="cc-top"><b>' + esc(a.name) + '</b><span>' + status + '</span></div>' +
         '<div class="cc-cycle">' + p.start + ' ~ ' + p.end + '　账单日 ' + a.statementDay + ' 号 · 还款日 ' + a.dueDay + ' 号</div>' +
         '<div class="cc-amt"><div class="big">' + fmt(spent) + '</div>' +
-        '<div class="rt">' + (issued ? '距还款 ' + (gap >= 0 ? gap + ' 天' : '已逾期 ' + (-gap) + ' 天') : p.gapToStmt !== 0 ? (dayGap(T, p.stmt) + ' 天后出账') : '今天出账') +
+        '<div class="rt">' + (issued ? '距还款 ' + (gap >= 0 ? gap + ' 天' : '已逾期 ' + (-gap) + ' 天') : (dayGap(T, p.stmt) === 0 ? '今天出账' : dayGap(T, p.stmt) + ' 天后出账')) +
         '<br>已还 ' + fmt(repaid) + '</div></div>' +
         '<div class="bar"><i class="' + (over ? 'over' : '') + '" style="width:' + pct + '%"></i></div>' +
         '<div class="cc-note">本期还需还 <b>' + fmt(Math.max(0, left)) + '</b>' +
@@ -9111,7 +9129,7 @@ document.addEventListener('DOMContentLoaded', () => {
       app: 'record-center', version: 2, exported: new Date().toISOString(),
       modules: App.getAllLS()
     };
-    await App.exportBackup(data, '全部 9 个工具');
+    await App.exportBackup(data, '全部 10 个工具');
   };
   App.exportBackup = async function (data, label) {
     const text = JSON.stringify(data);
@@ -9141,6 +9159,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try { data = JSON.parse(text); } catch (e) { App.toast('文件解析失败：不是有效 JSON'); return; }
     /* 原记账小程序备份：{v, accounts, cats, recs} → 走记账本专用通道 */
     if (data && !data.modules && data.accounts && data.cats && data.recs) {
+      App.pendingRestore = null;   // 避免上一次全量恢复残留串味
       App.pendingLedger = text;
       App.openLedgerRestore('记账小程序备份 · ' + (data.recs || []).length + ' 条记录');
       return;
@@ -9158,6 +9177,7 @@ document.addEventListener('DOMContentLoaded', () => {
   App.applyAllRestore = async function (mode) {
     const mods = App.pendingRestore;
     if (!mods) return;
+    App.pendingLedger = null;   // 全量恢复时清掉记账备份残留，避免误走记账通道
     App.$('allRestoreModal').classList.remove('open');
     let done = 0;
     for (const mod in mods) {
@@ -9534,6 +9554,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = window.Ledger.importBackupText(text, mode);
       if (!res.ok) { App.toast(res.msg); return; }
       App.pendingLedger = null;
+      App.pendingRestore = null;
       App.toast(mode === 'merge'
         ? ('已合并 ' + res.n + ' 笔新记录，共 ' + res.total + ' 笔')
         : ('已覆盖为 ' + res.total + ' 笔记录'));
@@ -9563,7 +9584,7 @@ document.addEventListener('DOMContentLoaded', () => {
     on('bkClear', 'click', async () => {
       const ok = await App.ask({
         title: '清空全部数据',
-        msg: '将删除全部 9 个工具的记录与设置，且无法恢复。\n建议先「导出全量备份」。确定继续吗？',
+        msg: '将删除全部 10 个工具的记录与设置，且无法恢复。\n建议先「导出全量备份」。确定继续吗？',
         buttons: [{ text: '取消', cls: 'askCancel', value: false }, { text: '我已备份，清空', cls: 'askDanger', value: true }]
       });
       if (!ok) return;
