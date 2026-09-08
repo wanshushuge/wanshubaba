@@ -9612,7 +9612,47 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <script>
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
-  window.addEventListener("load", function () { navigator.serviceWorker.register("./sw.js").catch(function () {}); });
+  function rcShowUpdateBar(sw) {
+    if (document.getElementById('rc-update-bar')) return;
+    var bar = document.createElement('div');
+    bar.id = 'rc-update-bar';
+    bar.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:9999;background:#1f7a5c;color:#fff;padding:10px 14px;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.25);font-size:14px;display:flex;gap:10px;align-items:center;max-width:92vw;font-family:inherit';
+    bar.innerHTML = '<span>发现新版本，点此刷新以更新</span>' +
+      '<button id="rc-update-btn" style="background:#fff;color:#1f7a5c;border:0;border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer">刷新</button>' +
+      '<button id="rc-update-x" style="background:transparent;color:#fff;border:0;font-size:18px;cursor:pointer;line-height:1">×</button>';
+    document.body.appendChild(bar);
+    document.getElementById('rc-update-btn').onclick = function () { sw.postMessage({ type: 'SKIP_WAITING' }); };
+    document.getElementById('rc-update-x').onclick = function () { bar.remove(); };
+  }
+  function rcShowPwaHint() {
+    try {
+      if (localStorage.getItem('rc_pwa_hint_seen')) return;
+      var ua = navigator.userAgent || '';
+      if (/MicroMessenger/i.test(ua)) { localStorage.setItem('rc_pwa_hint_seen', '1'); return; }
+      var installed = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+      if (installed) { localStorage.setItem('rc_pwa_hint_seen', '1'); return; }
+      var bar = document.createElement('div');
+      bar.id = 'rc-pwa-hint';
+      bar.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);top:14px;z-index:9998;background:#1f7a5c;color:#fff;padding:10px 14px;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.25);font-size:13px;line-height:1.6;display:flex;gap:10px;align-items:center;max-width:92vw;font-family:inherit';
+      bar.innerHTML = '<span>装到主屏更好用：iOS Safari 分享→添加到主屏幕；安卓 Chrome 菜单→安装</span>' +
+        '<button id="rc-pwa-x" style="background:#fff;color:#1f7a5c;border:0;border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap">知道了</button>';
+      document.body.appendChild(bar);
+      document.getElementById('rc-pwa-x').onclick = function () { localStorage.setItem('rc_pwa_hint_seen', '1'); bar.remove(); };
+    } catch (e) {}
+  }
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./sw.js').then(function (reg) {
+      if (reg.waiting) { rcShowUpdateBar(reg.waiting); return; }
+      var onInstalled = function (sw) { if (navigator.serviceWorker.controller) rcShowUpdateBar(sw); };
+      if (reg.installing) reg.installing.addEventListener('statechange', function () { if (reg.installing.state === 'installed') onInstalled(reg.installing); });
+      reg.addEventListener('updatefound', function () {
+        var installing = reg.installing;
+        installing.addEventListener('statechange', function () { if (installing.state === 'installed' && navigator.serviceWorker.controller) rcShowUpdateBar(installing); });
+      });
+    }).catch(function () {});
+    navigator.serviceWorker.addEventListener('controllerchange', function () { window.location.reload(); });
+    rcShowPwaHint();
+  });
 }
 </script>
 </body>
