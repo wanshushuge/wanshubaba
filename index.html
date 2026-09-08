@@ -256,6 +256,23 @@ details.fold .fbody{padding:0 15px 14px}
 .yearGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:5px}
 .quarterGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
 .cell{background:#f7f9fc;border-radius:6px;padding:5px 2px;text-align:center;min-width:0}
+.tgtCard{margin-top:4px}
+.tgtCard .tgtSet{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:10px}
+.tgtAnnual{display:flex;flex-direction:column;font-size:12px;color:#8a8a8a;gap:4px}
+.tgtAnnual input{width:120px}
+.tgtPct{font-size:12px;color:#8a8a8a;display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.tgtPct input{width:52px;margin:0 10px 0 2px}
+.tgtTable{display:flex;flex-direction:column}
+.tgtRow{display:grid;grid-template-columns:52px 1fr 1fr 84px;align-items:center;padding:7px 4px;border-bottom:1px solid rgba(0,0,0,.06);font-size:13px}
+.tgtHead{font-weight:600;color:#8a8a8a;font-size:12px}
+.tgtRow .tq-in{display:flex;align-items:center;gap:6px}
+.tgtInput{width:88px}
+.tov{font-style:normal;font-size:11px;color:#e8590c;background:#fff3e6;padding:1px 5px;border-radius:6px}
+.tq-rate{padding:3px 6px;border-radius:8px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
+.tq-rate.ok{color:#0ca678;background:rgba(12,166,120,.12)}
+.tq-rate.warn{color:#e8590c;background:rgba(232,89,12,.12)}
+.tq-rate.bad{color:#e03131;background:rgba(224,49,49,.12)}
+.tgtTotal{font-weight:700;border-top:2px solid rgba(0,0,0,.12);border-bottom:none;margin-top:2px}
 .cell .ml{display:block;font-size:9px;color:var(--sub);line-height:1.4}
 .cell .vl{display:block;font-size:11px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;word-break:break-all;line-height:1.4}
 .cell.has{background:var(--blue-soft)}
@@ -1653,6 +1670,8 @@ details.fold .fbody{padding:0 16px 16px}
     <div data-page-node-id="8TqWvFzsmEtUYKBSif1RUq" id="monthTableWrap"></div>
     <div class="sectionTitle">按季度汇总<small>每家医院一行，4 个季度展开</small></div>
     <div id="quarterTableWrap"></div>
+    <div class="sectionTitle">指标达成率<small>输入年度指标与季度占比，自动算当季指标与达成率；年中调指标可直接改当季指标</small></div>
+    <div id="targetWrap"></div>
     <div data-page-node-id="p8KT91beAnWvdYI5rDc1jR" class="sectionTitle"><!--pnid:ZIqWsrku6woWeIt48mzI2N-->按年汇总<small data-page-node-id="Ae739Ax5thuwmtWBzZeZQw"><!--pnid:Gsm0TVNPXW4vvYwZyLhkKQ-->每家医院一行，历年数据完整展开</small></div>
     <div data-page-node-id="tTYJ2y73Yf2ht1C9PCTt2U" id="yearTableWrap"></div>
   </div>
@@ -3004,6 +3023,61 @@ document.addEventListener('DOMContentLoaded', () => {
     return { hospMonth, hospYear, hospQuarter, monthTotal, yearTotal, quarterTotal, hospTotal, grand };
   }
   function sortedHosps(agg) { return Object.keys(agg.hospTotal).sort((a, b) => agg.hospTotal[b] - agg.hospTotal[a]); }
+
+  const TKEY = 'hosp-flow-targets';
+  function loadTargets() {
+    let t = { annual: 0, pct: [25, 25, 25, 25], override: {} };
+    try {
+      const raw = localStorage.getItem(TKEY);
+      if (raw) {
+        const o = JSON.parse(raw);
+        if (o && typeof o === 'object') {
+          t.annual = Number(o.annual) || 0;
+          if (Array.isArray(o.pct) && o.pct.length === 4) t.pct = o.pct.map(x => Number(x) || 0);
+          if (o.override && typeof o.override === 'object') t.override = o.override;
+        }
+      }
+    } catch (e) {}
+    return t;
+  }
+  function saveTargets(t) { try { localStorage.setItem(TKEY, JSON.stringify(t)); } catch (e) {} }
+  function renderTargets() {
+    const agg = buildAgg();
+    const t = loadTargets();
+    const wrap = $('targetWrap'); if (!wrap) return;
+    const y = aggYear;
+    const qActual = [1, 2, 3, 4].map(q => agg.quarterTotal[y + '-Q' + q] || 0);
+    const effTarget = [1, 2, 3, 4].map(q => {
+      const ov = t.override[y + '-Q' + q];
+      if (ov != null && !isNaN(ov)) return Number(ov);
+      return (t.annual || 0) * (t.pct[q - 1] || 0) / 100;
+    });
+    const sumT = effTarget.reduce((a, b) => a + b, 0);
+    const sumA = qActual.reduce((a, b) => a + b, 0);
+    let rows = '';
+    for (let q = 1; q <= 4; q++) {
+      const tg = effTarget[q - 1], ac = qActual[q - 1];
+      const rate = tg > 0 ? (ac / tg * 100) : 0;
+      const cls = rate >= 100 ? 'ok' : (rate >= 70 ? 'warn' : 'bad');
+      const isOv = t.override[y + '-Q' + q] != null && !isNaN(t.override[y + '-Q' + q]);
+      rows += '<div class="tgtRow"><span class="tq">Q' + q + '</span>'
+        + '<span class="tq-in"><input class="tgtInput" data-q="' + q + '" type="number" min="0" step="any" value="' + (tg || 0) + '">' + (isOv ? '<i class="tov">手动</i>' : '') + '</span>'
+        + '<span class="tq-ac">' + fmtQty(ac) + '</span>'
+        + '<span class="tq-rate ' + cls + '">' + (tg > 0 ? rate.toFixed(1) + '%' : '—') + '</span></div>';
+    }
+    const rateY = sumT > 0 ? (sumA / sumT * 100) : 0;
+    const clsY = rateY >= 100 ? 'ok' : (rateY >= 70 ? 'warn' : 'bad');
+    wrap.innerHTML = '<div class="card tgtCard">'
+      + '<div class="tgtSet"><label class="tgtAnnual">年度指标<input id="tgtAnnual" type="number" min="0" step="any" value="' + (t.annual || 0) + '"></label>'
+      + '<div class="tgtPct">季度占比(%)：' + [1, 2, 3, 4].map(q => 'Q' + q + '<input class="tgtPctIn" data-q="' + q + '" type="number" min="0" max="100" step="any" value="' + (t.pct[q - 1] || 0) + '">').join('') + '</div></div>'
+      + '<div class="tgtTable"><div class="tgtRow tgtHead"><span>季度</span><span>当季指标</span><span>当季实际</span><span>达成率</span></div>'
+      + rows
+      + '<div class="tgtRow tgtTotal"><span>年度</span><span>' + fmtQty(sumT) + '</span><span>' + fmtQty(sumA) + '</span><span class="tq-rate ' + clsY + '">' + (sumT > 0 ? rateY.toFixed(1) + '%' : '—') + '</span></div>'
+      + '</div>'
+      + '<p class="muted" style="margin-top:8px;line-height:1.7">当季指标默认 = 年度指标 × 季度占比；年中调整指标时，直接改"当季指标"格即可（标"手动"覆盖公式）。点"重置按比例"恢复按占比计算。年度达成率 = 各季实际 ÷ 各季指标合计。</p>'
+      + '<div class="actions" style="margin-top:6px"><button class="btn-ghost btn btn-sm" id="tgtReset">重置按比例</button></div>'
+      + '</div>';
+  }
   function sortedYears(agg) { return Object.keys(agg.yearTotal).sort(); }
 
   /* ================= 录入 ================= */
@@ -3178,7 +3252,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!years.length) return;
     const ny = aggYear + d;
     if (ny < Math.min(...years) || ny > Math.max(...years)) return;
-    aggYear = ny; renderAggTables();
+    aggYear = ny; renderAggTables(); renderTargets();
   }
 
   /* ================= 趋势（Chart.js 版） ================= */
@@ -3508,6 +3582,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderRecordList(); renderChips(); buildDatalist(); updateMiniStats();
     if (activeTab === 'agg') { renderAggCards(); renderAggTables(); }
     if (activeTab === 'trend') { renderHospSelect(); renderTrends(); }
+    renderTargets();
   }
 
   /* ================= 注册到框架 ================= */
@@ -3552,6 +3627,16 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       $('btnYearPrev').addEventListener('click', () => shiftAggYear(-1));
       $('btnYearNext').addEventListener('click', () => shiftAggYear(1));
+      const tw = $('targetWrap');
+      if (tw) {
+        tw.addEventListener('change', e => {
+          const t = loadTargets();
+          if (e.target.id === 'tgtAnnual') { t.annual = parseFloat(e.target.value) || 0; saveTargets(t); renderTargets(); return; }
+          if (e.target.classList.contains('tgtPctIn')) { const q = Number(e.target.dataset.q); t.pct[q - 1] = parseFloat(e.target.value) || 0; saveTargets(t); renderTargets(); return; }
+          if (e.target.classList.contains('tgtInput')) { const q = Number(e.target.dataset.q); const v = parseFloat(e.target.value); const kk = aggYear + '-Q' + q; if (isNaN(v)) delete t.override[kk]; else t.override[kk] = v; saveTargets(t); renderTargets(); return; }
+        });
+        tw.addEventListener('click', e => { if (e.target.id === 'tgtReset') { const t = loadTargets(); t.override = {}; saveTargets(t); renderTargets(); } });
+      }
       $('selHosp').addEventListener('change', renderTrends);
       refreshAll();
     },
