@@ -1395,6 +1395,9 @@ details.fold .fbody{padding:0 16px 16px}
 #view-crm .mindWrap {margin:10px 12px 18px;overflow:auto;background:var(--card-low);backdrop-filter:blur(12px);
   -webkit-backdrop-filter:blur(12px);border:var(--glass-border);border-radius:var(--r-card);
   box-shadow:var(--shadow-card);padding:12px;max-height:74vh;-webkit-overflow-scrolling:touch}
+/* 进入脑图视图时，整图缩小到一屏内，容器高度自适应、不出现上下滚动 */
+#view-crm.crmMindFit .mindWrap {max-height:none;overflow:visible}
+#view-crm.crmMindFit #mindSizer {margin:0 auto}
 #view-crm #mindSizer {position:relative}
 #view-crm .mindCanvas {position:absolute;left:0;top:0;transform-origin:0 0}
 #view-crm .mindCanvas svg {position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
@@ -1551,25 +1554,17 @@ details.fold .fbody{padding:0 16px 16px}
       <p class="muted" style="line-height:1.9">
         · 单文件离线应用：双击本文件即可使用，无需联网，数据不上传<br>
         · 数据保存在当前浏览器的 localStorage，换设备 / 清缓存会丢失，请定期备份<br>
-        · 手机建议添加到主屏幕：iOS Safari 分享 → 添加到主屏幕；Android Chrome 菜单 → 添加到主屏幕<br>
+        · 装到手机桌面（全屏离线用）：iPhone 用 Safari 打开本页 → 分享 →「添加到主屏幕」；安卓用 Chrome 打开 → 右上角菜单 →「添加到主屏幕 / 安装应用」<br>
         · 原来单独用的记账小程序，其导出的备份可在「备份 → 导入记账小程序备份」里直接恢复
       </p>
     </div>
   </details>
 
   <div class="card">
-    <h3>📌 装到手机桌面</h3>
-    <p class="muted" style="line-height:1.9">
-      iPhone：Safari 打开本页 → 分享 → 「添加到主屏幕」。<br>
-      安卓：Chrome 打开 → 右上角菜单 → 「添加到主屏幕 / 安装应用」。<br>
-      装好后点图标就是全屏使用，断网也能用。
-    </p>
-  </div>
-  <div class="card">
     <h3>ℹ️ 关于</h3>
     <p class="muted" style="line-height:1.9">
       记录中心 v2 · 生活工作一本通<br>
-      集成工具：记账本、医院流向、客户产出、日均账本、元UP能耗、元UP充电账本、哨兵耗电、充电日历、排便日历、经期助手<br>
+      已集成 <b id="aboutToolCount">12</b> 个工具：<span id="aboutTools"></span><br>
       全部数据只写本机，不发往任何服务器<br>
       版权归属：吴万书
     </p>
@@ -2638,6 +2633,7 @@ details.fold .fbody{padding:0 16px 16px}
       <button class="btn btn-ghost btn-sm" id="mindIn" title="放大">＋</button>
       <button class="btn btn-ghost btn-sm" id="mindFit">适应</button>
       <button class="btn btn-ghost btn-sm" id="mindToggle">全部收起</button>
+      <button class="btn btn-ghost btn-sm" id="mindExport" title="导出为 4K 图片">🖼 导出图片</button>
     </div>
     <div class="mindWrap" id="mindWrap"><div id="mindSizer"><div class="mindCanvas" id="mindCanvas"></div></div></div>
     <div class="card" style="margin:0 12px 20px">
@@ -9945,6 +9941,15 @@ document.addEventListener('DOMContentLoaded', () => {
         ol.appendChild(row);
       });
     }
+    /* 关于：工具清单动态读取，避免写死（排除"备份/我的"两个页面型入口） */
+    try {
+      const names = App.order
+        .filter(id => id !== 'backup' && id !== 'me')
+        .map(id => (App.mods[id] && App.mods[id].name) || id);
+      const at = App.$('aboutToolCount'), ao = App.$('aboutTools');
+      if (at) at.textContent = names.length;
+      if (ao) ao.textContent = names.join('、');
+    } catch (e) { }
   };
 
   /* ---------- 注册「备份」「我的」两个页面 ---------- */
@@ -10006,6 +10011,8 @@ App.register('crm', {
     if (v === 'vCusts') { $('crmTitle').textContent = '客户列表'; $('hAct').textContent = '＋ 客户'; }
     if (v === 'vCust') { $('crmTitle').textContent = '客户详情'; $('hAct').textContent = '＋ 跟进'; }
     if (v === 'vMind') $('crmTitle').textContent = '关系脑图';
+    /* 进入脑图：容器高度自适应、整图可见（不上下拉）；离开时恢复 */
+    $('view-crm').classList.toggle('crmMindFit', v === 'vMind');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   $('btnBack').addEventListener('click', () => {
@@ -10618,16 +10625,9 @@ App.register('crm', {
     if (s > 1) s = 1; if (s < 0.3) s = 0.3;
     mindScale = Math.round(s * 100) / 100; applyScale();
   }
-  function renderMind() {
-    const q = ($('mindSearch').value || '').trim().toLowerCase();
-    const box = $('mindCanvas');
+  /* 计算脑图布局（render 与导出共用，保证一致） */
+  function buildMindLayout() {
     const hosps = sortHosps(DB.hospitals);
-    if (!hosps.length) {
-      box.innerHTML = '<div class="emptyTip">还没有医院<br>先添加医院，再回来这里看脑图</div>';
-      box.style.width = '100%'; box.style.height = '160px'; box.style.transform = 'none';
-      $('mindSizer').style.width = '100%'; $('mindSizer').style.height = '160px';
-      return;
-    }
     const ROOT_W = 104, ROOT_H = 40, H_W = 178, H_H = 42, C_W = 160, C_H = 32;
     const GX1 = 84, GX2 = 62, VGAP = 18, CGAP = 8, PAD = 16;
     const rootX = PAD, hospX = rootX + ROOT_W + GX1, custX = hospX + H_W + GX2;
@@ -10654,7 +10654,20 @@ App.register('crm', {
     const rootY = (totalH - ROOT_H) / 2;
     links.forEach(l => { if (l.root) l.y1 = rootY + ROOT_H / 2; });
     nodes.push({ t: 'root', x: rootX, y: rootY, w: ROOT_W, h: ROOT_H });
-    const W = maxRight + PAD, H = totalH;
+    return { W: maxRight + PAD, H: totalH, nodes: nodes, links: links };
+  }
+  function renderMind() {
+    const q = ($('mindSearch').value || '').trim().toLowerCase();
+    const box = $('mindCanvas');
+    const hosps = sortHosps(DB.hospitals);
+    if (!hosps.length) {
+      box.innerHTML = '<div class="emptyTip">还没有医院<br>先添加医院，再回来这里看脑图</div>';
+      box.style.width = '100%'; box.style.height = '160px'; box.style.transform = 'none';
+      $('mindSizer').style.width = '100%'; $('mindSizer').style.height = '160px';
+      return;
+    }
+    const lay = buildMindLayout();
+    const W = lay.W, H = lay.H, nodes = lay.nodes, links = lay.links;
     let svg = '<svg width="' + W + '" height="' + H + '">';
     links.forEach(l => {
       const k = (l.x2 - l.x1) / 2;
@@ -10688,6 +10701,116 @@ App.register('crm', {
     const anyOpen = DB.hospitals.some(h => mindIsOpen(h.id));
     $('mindToggle').textContent = anyOpen ? '全部收起' : '全部展开';
   }
+  /* 导出脑图为 4K PNG（纯 Canvas 手绘，整图包含、不截断、无外部依赖） */
+  function exportMindPNG() {
+    const hosps = sortHosps(DB.hospitals);
+    if (!hosps.length) { toast('还没有医院，先添加医院再导出'); return; }
+    const lay = buildMindLayout();
+    const scale = 4; /* 4 倍 → 4K 级清晰度 */
+    const padOut = 28;
+    const cv = document.createElement('canvas');
+    cv.width = Math.round((lay.W + padOut * 2) * scale);
+    cv.height = Math.round((lay.H + padOut * 2) * scale);
+    const ctx = cv.getContext('2d');
+    ctx.scale(scale, scale);
+    const ox = padOut, oy = padOut;
+    /* 背景 */
+    const cssBg = getComputedStyle(document.body).backgroundColor || '#f3f5fb';
+    ctx.fillStyle = (cssBg && cssBg !== 'rgba(0, 0, 0, 0)' && cssBg !== 'transparent') ? cssBg : '#f3f5fb';
+    ctx.fillRect(0, 0, lay.W + padOut * 2, lay.H + padOut * 2);
+    ctx.translate(ox, oy);
+    /* 连线 */
+    lay.links.forEach(l => {
+      const k = (l.x2 - l.x1) / 2;
+      ctx.beginPath();
+      ctx.moveTo(l.x1, l.y1);
+      ctx.bezierCurveTo(l.x1 + k, l.y1, l.x2 - k, l.y2, l.x2, l.y2);
+      ctx.strokeStyle = l.root ? 'rgba(112,72,232,.42)'
+        : (l.lv === 'A' ? 'rgba(224,49,49,.45)' : (l.lv === 'B' ? 'rgba(232,89,12,.42)' : 'rgba(139,149,173,.34)'));
+      ctx.lineWidth = l.root ? 2 : 1.5;
+      ctx.stroke();
+    });
+    /* 节点 */
+    lay.nodes.forEach(n => {
+      const x = n.x, y = n.y, w = n.w, h = n.h;
+      ctx.save();
+      ctx.shadowColor = 'rgba(31,38,135,.10)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 4;
+      roundRect(ctx, x, y, w, h, 14);
+      if (n.t === 'root') {
+        const g = ctx.createLinearGradient(x, y, x + w, y);
+        g.addColorStop(0, '#4263eb'); g.addColorStop(1, '#9775fa');
+        ctx.fillStyle = g; ctx.fill();
+      } else if (n.t === 'hosp') {
+        ctx.fillStyle = '#ffffff'; ctx.fill();
+        ctx.shadowColor = 'transparent';
+        ctx.fillStyle = '#4263eb'; ctx.fillRect(x, y, 5, h); /* 左边条 */
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,.88)'; ctx.fill();
+      }
+      ctx.restore();
+      ctx.fillStyle = (n.t === 'root') ? '#ffffff' : '#1f2433';
+      ctx.font = (n.t === 'root' ? '700 13px' : (n.t === 'hosp' ? '700 13px' : '600 12.5px')) + ' -apple-system,"PingFang SC","Microsoft YaHei",sans-serif';
+      ctx.textBaseline = 'middle';
+      let tx = x + 12;
+      if (n.t === 'root') {
+        ctx.textAlign = 'center';
+        ctx.fillText('全部 ' + DB.hospitals.length + ' 家', x + w / 2, y + h / 2);
+      } else if (n.t === 'hosp') {
+        ctx.textAlign = 'left';
+        const icon = '🏥 ';
+        ctx.fillText(icon, tx, y + h / 2);
+        const iw = ctx.measureText(icon).width;
+        let label = n.name + (n.admit ? ' [' + n.admit + ']' : '');
+        const cnt = '  ' + n.n + (n.open ? ' ▾' : ' ▸');
+        let lw = ctx.measureText(label).width;
+        if (tx + iw + lw + ctx.measureText(cnt).width > x + w - 10) {
+          label = clip(ctx, label, w - 10 - iw - ctx.measureText(cnt).width);
+          lw = ctx.measureText(label).width;
+        }
+        ctx.fillText(label, tx + iw, y + h / 2);
+        ctx.fillStyle = 'rgba(31,36,51,.55)';
+        ctx.fillText(cnt, tx + iw + lw, y + h / 2);
+      } else {
+        ctx.textAlign = 'left';
+        const lv = (n.c.level || 'C');
+        const lvTxt = lv + ' ';
+        const lvColor = lv === 'A' ? '#e03131' : (lv === 'B' ? '#f76707' : '#868e96');
+        ctx.fillStyle = lvColor; ctx.fillText(lvTxt, tx, y + h / 2);
+        const lw = ctx.measureText(lvTxt).width;
+        let name = n.c.name;
+        if (tx + lw + ctx.measureText(name).width > x + w - 12) name = clip(ctx, name, w - 12 - lw);
+        ctx.fillStyle = '#1f2433';
+        ctx.fillText(name, tx + lw, y + h / 2);
+      }
+    });
+    cv.toBlob(function (blob) {
+      if (!blob) { toast('导出失败，请重试'); return; }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const d = new Date();
+      const ds = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+      a.href = url; a.download = '医院客户脑图_' + ds + '.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      toast('已导出 4K 图片（' + cv.width + '×' + cv.height + '）');
+    }, 'image/png');
+  }
+  function roundRect(ctx, x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  function clip(ctx, s, maxW) {
+    s = String(s);
+    if (ctx.measureText(s).width <= maxW) return s;
+    while (s.length > 1 && ctx.measureText(s + '…').width > maxW) s = s.slice(0, -1);
+    return s + '…';
+  }
   $('mindCanvas').addEventListener('click', e => {
     const hn = e.target.closest('[data-mh]');
     if (hn) {
@@ -10704,6 +10827,7 @@ App.register('crm', {
   $('mindIn').addEventListener('click', () => { if (mindScale < 2) { mindScale = Math.round((mindScale + 0.15) * 100) / 100; applyScale(); } });
   $('mindOut').addEventListener('click', () => { if (mindScale > 0.3) { mindScale = Math.round((mindScale - 0.15) * 100) / 100; applyScale(); } });
   $('mindFit').addEventListener('click', fitMind);
+  $('mindExport').addEventListener('click', exportMindPNG);
   $('mindSearch').addEventListener('input', renderMind);
   $('mindToggle').addEventListener('click', () => {
     const m = DB.settings.mindOpen || (DB.settings.mindOpen = {});
