@@ -1,5 +1,5 @@
 /* 记录中心 · Service Worker —— 离线缓存（页面走网络优先，资源走缓存优先） */
-const CACHE = 'record-center-v2';
+const CACHE = 'record-center-v4';
 const ASSETS = [
   './',
   './index.html',

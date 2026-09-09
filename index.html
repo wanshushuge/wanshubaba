@@ -11,6 +11,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<script>(function(){try{var t=localStorage.getItem('rc_theme')||'auto';var d=(t==='dark')||(t==='auto'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('rc-dark');}catch(e){}})();</script>
 <style data-page-node-id="M6yaw4aHe6Bi47jVZsK3As" data-pnid-children="nCSJkOSnVEzAQNmfH6pfnp">
 /* ============================================================
    记录中心 · 统一设计系统
@@ -181,6 +182,38 @@ details.fold>summary::-webkit-details-marker{display:none}
 details.fold>summary::before{content:'▸';color:var(--sub);font-size:12px;transition:transform .15s}
 details.fold[open]>summary::before{content:'▾'}
 details.fold .fbody{padding:0 15px 14px}
+/* ============ 深色模式（跟随系统 / 「我的」里手动切） ============ */
+html.rc-dark{
+  --bg:#11151c; --card:rgba(30,36,46,.72); --card-strong:rgba(38,45,56,.92); --card-low:rgba(30,36,46,.55);
+  --text:#e6edf5; --sub:#9aa8b8; --line:rgba(255,255,255,.10); --line-soft:rgba(255,255,255,.07);
+  --blue-soft:#1b2b45; --green-soft:#14332b; --red-soft:#3b1f21; --orange-soft:#3a2c14;
+  --purple-soft:#2b2350; --cyan-soft:#123239; --shadow:0 2px 10px rgba(0,0,0,.35);
+}
+html.rc-dark body{background:#11151c;color:var(--text)}
+html.rc-dark .card,html.rc-dark .panel,html.rc-dark .item,html.rc-dark .list-item,html.rc-dark .mCard,
+html.rc-dark .recItem,html.rc-dark .open-list,html.rc-dark .scrollbox,html.rc-dark .statline,
+html.rc-dark .computed,html.rc-dark .spreview,html.rc-dark .stip,html.rc-dark .verdict .vconcl,
+html.rc-dark .hospRow,html.rc-dark .record-item,html.rc-dark .item-card,html.rc-dark .modal{
+  background:var(--card-strong)!important;border-color:var(--line)!important;color:var(--text)}
+html.rc-dark .sStat,html.rc-dark .day,html.rc-dark .pd-day,html.rc-dark .seg,html.rc-dark .chips,
+html.rc-dark .chip,html.rc-dark .miniBtn,html.rc-dark .mini,html.rc-dark .btn-ghost,html.rc-dark .yearBar button{
+  background:#1a2029!important;color:var(--text)!important;border-color:var(--line)!important}
+html.rc-dark .seg button{color:var(--sub)!important;background:transparent!important}
+html.rc-dark .seg button.on{background:#26303d!important;color:var(--text)!important}
+html.rc-dark input,html.rc-dark select,html.rc-dark textarea{
+  background:#1a2029!important;color:var(--text)!important;border-color:var(--line)!important;color-scheme:dark}
+html.rc-dark input::placeholder,html.rc-dark textarea::placeholder{color:#6c7a8a!important}
+html.rc-dark .home-hero{filter:brightness(.94) saturate(.96)}
+html.rc-dark .hpill{background:rgba(255,255,255,.12)!important;border-color:rgba(255,255,255,.18)!important}
+html.rc-dark table th,html.rc-dark table td,html.rc-dark .tbl tr{border-color:var(--line)!important;color:var(--text)}
+html.rc-dark .emptyTip,html.rc-dark .muted,html.rc-dark small,html.rc-dark .flab{color:var(--sub)!important}
+html.rc-dark .nav,html.rc-dark #navBar,html.rc-dark header,html.rc-dark .appHeader{
+  background:rgba(20,25,33,.94)!important;border-color:var(--line)!important;color:var(--text)}
+html.rc-dark .toastWrap > *,html.rc-dark .tip{background:#1a2029!important;color:var(--text)!important}
+html.rc-dark .mod-card{background:rgba(40,48,60,.6)!important;border-color:rgba(255,255,255,.10)!important}
+html.rc-dark .monthTable,html.rc-dark .cal,html.rc-dark .pd-grid{background:var(--card-strong)!important}
+html.rc-dark .xlink{color:#8ab4ff!important}
+html.rc-dark .tag,html.rc-dark .badge{background:#26303d!important;color:var(--text)!important}
 </style>
 <style data-page-node-id="rQczrSV92zpvVjlxNH3hZ2" data-pnid-children="eA8kpM74QpbYO1lp47FRpZ">
 /* ============================================================
@@ -1319,147 +1352,75 @@ details.fold .fbody{padding:0 16px 16px}
   border-bottom:1px solid rgba(31,38,135,0.07);
 }
 
-/* ===== 医院客户管理（crm）独有样式 ===== */
-
-/* ===== 沿用记录中心毛玻璃设计系统 ===== */
-:root{
-  --bg:#eef2f7;
-  --card:rgba(255,255,255,0.50);
-  --card-strong:rgba(255,255,255,0.85);
-  --card-low:rgba(255,255,255,0.42);
-  --text:#1a2238; --sub:#5b6b85; --faint:#8b95ad;
-  --blue:#7048e8; --blue-deep:#5f3dc4; --blue-soft:rgba(112,72,232,0.12);
-  --green:#1f9d55; --green-soft:rgba(31,157,85,0.12);
-  --red:#e03131;  --red-soft:rgba(224,49,49,0.10);
-  --orange:#e8590c; --orange-soft:rgba(232,89,12,0.10);
-  --cyan:#0e9cb6; --cyan-soft:rgba(14,156,182,0.10);
-  --glass-blur:22px; --glass-saturate:180%;
-  --glass-border:1px solid rgba(255,255,255,0.65);
-  --r-card:22px; --r-card-lg:28px; --r-btn:14px; --r-input:16px;
-  --shadow-card:0 8px 32px rgba(31,38,135,0.08), 0 2px 8px rgba(31,38,135,0.04);
-  --shadow-deep:0 14px 44px rgba(31,38,135,0.16), 0 4px 12px rgba(31,38,135,0.06);
-  --shadow-pop:0 12px 40px rgba(31,38,135,0.22), 0 6px 14px rgba(31,38,135,0.08);
-  --line:rgba(255,255,255,0.55); --line-soft:rgba(31,38,135,0.08);
-  --header-h:56px;
-}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{-webkit-text-size-adjust:100%}
-body{
-  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
-  font-size:14px;line-height:1.55;color:var(--text);min-height:100dvh;position:relative;overflow-x:hidden;
-  background:linear-gradient(135deg,#e6dbff 0%,#f3d5f0 40%,#d6e0ff 100%);
-  background-attachment:fixed;
-}
-body::before{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:-1;
-  background:
-    radial-gradient(closest-side at 18% 22%, rgba(200,130,255,0.65) 0%, rgba(200,130,255,0) 45%),
-    radial-gradient(closest-side at 82% 18%, rgba(150,150,255,0.65) 0%, rgba(150,150,255,0) 45%),
-    radial-gradient(closest-side at 25% 78%, rgba(175,110,255,0.55) 0%, rgba(175,110,255,0) 45%),
-    radial-gradient(closest-side at 85% 85%, rgba(235,150,235,0.55) 0%, rgba(235,150,235,0) 45%);
-  filter:saturate(1.1);
-}
-button{font-family:inherit;cursor:pointer;touch-action:manipulation}
-input,select,textarea{font-family:inherit;font-size:14px;color:var(--text)}
-.hidden{display:none!important}
-/* ===== 头部 ===== */
-#appHeader{
-  position:sticky;top:0;z-index:900;height:var(--header-h);
-  display:flex;align-items:center;gap:8px;padding:0 14px;
-  background:linear-gradient(135deg,rgba(112,72,232,0.92),rgba(151,117,250,0.92));
-  backdrop-filter:blur(14px) saturate(180%);-webkit-backdrop-filter:blur(14px) saturate(180%);
-  color:#fff;font-size:16px;font-weight:600;
-  border-bottom:1px solid rgba(255,255,255,0.18);
-  box-shadow:0 4px 18px rgba(31,38,135,0.10);
-}
-#appHeader .hBack{border:none;background:rgba(255,255,255,0.22);color:#fff;width:34px;height:34px;border-radius:11px;font-size:18px;line-height:1;flex:0 0 auto;backdrop-filter:blur(8px)}
-#appHeader .hTitle{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#appHeader .hAct{border:none;background:rgba(255,255,255,0.22);color:#fff;height:32px;padding:0 12px;border-radius:10px;font-size:13px;font-weight:600;flex:0 0 auto;backdrop-filter:blur(8px)}
-main{max-width:760px;margin:0 auto;padding:0 0 40px}
-.crmView{display:none}
-.view.on{display:block;animation:fadeIn .22s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-/* ===== 玻璃卡片 ===== */
-/* ===== 输入 ===== */
-input[type=text],input[type=number],input[type=date],input[type=tel],select,textarea{
-  width:100%;padding:11px 13px;border-radius:var(--r-input);background:var(--card-strong);
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  border:1px solid var(--line-soft);color:var(--text);outline:none;transition:all .18s;
-}
-input:focus,select:focus,textarea:focus{background:#fff;border-color:var(--blue);box-shadow:0 0 0 4px rgba(112,72,232,0.12)}
-textarea{resize:vertical;min-height:42px;line-height:1.55}
-input::placeholder,textarea::placeholder{color:var(--faint)}
-@media(max-width:400px){}
-/* ===== 按钮 ===== */
-/* ===== chip / 统计 / 徽章 ===== */
-@media(max-width:620px){}
-.lv{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:8px;font-size:12.5px;font-weight:800;color:#fff;flex:0 0 auto}
-.lv.A{background:linear-gradient(135deg,#fa5252,#e03131)}
-.lv.B{background:linear-gradient(135deg,#fd7e14,#f76707)}
-.lv.C{background:linear-gradient(135deg,#adb5bd,#868e96)}
-/* ===== 列表卡片 ===== */
-.tagline{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
-.tagline .t{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--blue-soft);color:var(--blue-deep);font-weight:600}
-.tagline .t.g{background:var(--green-soft);color:var(--green)}
-/* ===== 详情 kv ===== */
-.kv{display:flex;gap:10px;padding:9px 0;border-bottom:1px dashed rgba(31,38,135,.09);font-size:13.5px}
-.kv:last-child{border-bottom:none}
-.kv .k{width:82px;flex:0 0 auto;color:var(--sub);font-weight:600}
-.kv .v{flex:1;min-width:0;word-break:break-all}
-.kv .v a{color:var(--blue);text-decoration:none;font-weight:700}
-.follow{border-left:3px solid var(--blue);padding:6px 0 6px 12px;margin-bottom:10px}
-.follow .fh{font-size:11.5px;color:var(--sub);font-weight:600}
-.follow .fc{font-size:13.5px;line-height:1.65;margin-top:2px;white-space:pre-wrap;word-break:break-word}
-/* ===== 弹窗 ===== */
-.mask{position:fixed;inset:0;z-index:2000;background:rgba(26,34,56,.35);backdrop-filter:blur(6px);
-  display:flex;align-items:center;justify-content:center;padding:16px}
-.mCard{width:100%;max-width:460px;max-height:86vh;overflow:auto;
+/* ===== 医院客户管理（crm）独有样式 · 作用域限定 #view-crm，不影响其他工具 ===== */
+#view-crm .crmView {display:none}
+#view-crm .crmView.on {display:block;animation:fadeIn .22s ease}
+#view-crm .lv {display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:8px;font-size:12.5px;font-weight:800;color:#fff;flex:0 0 auto}
+#view-crm .lv.A {background:linear-gradient(135deg,#fa5252,#e03131)}
+#view-crm .lv.B {background:linear-gradient(135deg,#fd7e14,#f76707)}
+#view-crm .lv.C {background:linear-gradient(135deg,#adb5bd,#868e96)}
+#view-crm .tagline {display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+#view-crm .tagline .t {font-size:11px;padding:2px 8px;border-radius:999px;background:var(--blue-soft);color:var(--blue-deep);font-weight:600}
+#view-crm .tagline .t.g {background:var(--green-soft);color:var(--green)}
+#view-crm .kv:last-child {border-bottom:none}
+#view-crm .kv .k {width:82px;flex:0 0 auto;color:var(--sub);font-weight:600}
+#view-crm .kv .v {flex:1;min-width:0;word-break:break-all}
+#view-crm .kv .v a {color:var(--blue);text-decoration:none;font-weight:700}
+#view-crm .follow {border-left:3px solid var(--blue);padding:6px 0 6px 12px;margin-bottom:10px}
+#view-crm .follow .fh {font-size:11.5px;color:var(--sub);font-weight:600}
+#view-crm .follow .fc {font-size:13.5px;line-height:1.65;margin-top:2px;white-space:pre-wrap;word-break:break-word}
+#view-crm .mCard {width:100%;max-width:460px;max-height:86vh;overflow:auto;
   background:rgba(255,255,255,0.92);backdrop-filter:blur(26px) saturate(180%);
   border:1px solid rgba(255,255,255,0.7);border-radius:var(--r-card-lg);padding:18px;box-shadow:var(--shadow-pop)}
-.mCard h3{font-size:16px;font-weight:700;margin-bottom:6px}
-.mCard .mMsg{font-size:13.5px;color:var(--sub);line-height:1.7;white-space:pre-wrap;margin-bottom:12px}
-.mRow{display:flex;gap:9px;margin-top:14px}
-.mRow 
-.mRow 
-.needWrap{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
-/* ===== Toast ===== */
-/* ===== 脑图 ===== */
-.mindBar{display:flex;gap:8px;align-items:center;margin:12px 12px 0;flex-wrap:wrap}
-.mindBar input{flex:1;min-width:130px}
-.mindWrap{margin:10px 12px 18px;overflow:auto;background:var(--card-low);backdrop-filter:blur(12px);
+#view-crm .mCard h3 {font-size:16px;font-weight:700;margin-bottom:6px}
+#view-crm .mCard .mMsg {font-size:13.5px;color:var(--sub);line-height:1.7;white-space:pre-wrap;margin-bottom:12px}
+#view-crm .mRow {display:flex;gap:9px;margin-top:14px}
+#view-crm .mRow .btn.gh {background:var(--card-strong);color:var(--sub);border:1px solid var(--line-soft);box-shadow:none}
+#view-crm .xlink{color:var(--blue);font-size:11.5px;opacity:.9;margin-top:3px}
+/* 科室会 / 学术会议记录 */
+#view-meet .mGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px}
+@media(max-width:520px){#view-meet .mGrid{grid-template-columns:repeat(2,1fr)}}
+#view-meet .mItem{background:var(--card-strong);border:1px solid var(--line);border-radius:11px;padding:11px 12px;margin-bottom:8px}
+#view-meet .mHead{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap}
+#view-meet .mTitle{font-size:14.5px;font-weight:700;color:var(--text);line-height:1.4}
+#view-meet .mMeta{font-size:12px;color:var(--sub);margin-top:4px;line-height:1.6}
+#view-meet .mLine{font-size:12.5px;color:var(--text);margin-top:4px;line-height:1.6;word-break:break-word}
+#view-meet .mNext{color:var(--blue);font-size:12.5px;margin-top:4px}
+#view-meet .mBtns{display:flex;gap:6px;margin-top:8px}
+#view-meet .mBtns button{border:none;background:var(--blue-soft);color:var(--blue);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600}
+#view-meet .mBtns button.danger{background:var(--red-soft);color:var(--red)}
+#view-meet .mMonth{font-size:13px;font-weight:700;color:var(--sub);margin:14px 0 6px}
+#view-crm .needWrap {display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+#view-crm .mindBar input {flex:1;min-width:130px}
+#view-crm .mindWrap {margin:10px 12px 18px;overflow:auto;background:var(--card-low);backdrop-filter:blur(12px);
   -webkit-backdrop-filter:blur(12px);border:var(--glass-border);border-radius:var(--r-card);
   box-shadow:var(--shadow-card);padding:12px;max-height:74vh;-webkit-overflow-scrolling:touch}
-#mindSizer{position:relative}
-.mindCanvas{position:absolute;left:0;top:0;transform-origin:0 0}
-.mindCanvas svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
-.mNode{position:absolute;display:flex;align-items:center;gap:6px;box-sizing:border-box;cursor:pointer;
+#view-crm #mindSizer {position:relative}
+#view-crm .mindCanvas {position:absolute;left:0;top:0;transform-origin:0 0}
+#view-crm .mindCanvas svg {position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+#view-crm .mNode {position:absolute;display:flex;align-items:center;gap:6px;box-sizing:border-box;cursor:pointer;
   border-radius:14px;padding:0 12px;font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;
   background:var(--card-strong);border:1px solid var(--line);box-shadow:0 4px 14px rgba(31,38,135,.10);transition:opacity .18s}
-.mNode:active{filter:brightness(.93)}
-.mNode.root{background:linear-gradient(135deg,var(--blue) 0%,#9775fa 100%);color:#fff;border-color:transparent;
+#view-crm .mNode:active {filter:brightness(.93)}
+#view-crm .mNode.root {background:linear-gradient(135deg,var(--blue) 0%,#9775fa 100%);color:#fff;border-color:transparent;
   box-shadow:0 6px 18px rgba(112,72,232,.32);justify-content:center;cursor:default}
-.mNode.hosp{border-left:5px solid var(--blue)}
-.mNode.cust{font-weight:600;font-size:12.5px;padding:0 10px;background:rgba(255,255,255,.62)}
-.mNode .cnt{font-size:11px;font-weight:600;opacity:.65;margin-left:auto}
-.mNode .lv{width:20px;height:20px;line-height:20px;font-size:11px;border-radius:7px;flex:0 0 auto}
-.mNode.dim{opacity:.16}
-.admit{display:inline-block;padding:1px 8px;border-radius:9px;font-size:11px;font-weight:700;line-height:1.6;vertical-align:middle}
-.admit.green{background:rgba(34,197,94,.16);color:#16a34a}
-.admit.blue{background:rgba(47,124,246,.16);color:#2f7cf6}
-.admit.orange{background:rgba(245,159,0,.18);color:#d97706}
-.admit.purple{background:rgba(139,92,246,.16);color:#8b5cf6}
-/* ===== 待跟进 / 生日提醒 ===== */
-.remindCard{margin:12px;background:var(--card-strong);backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  border:1px solid var(--line);border-radius:var(--r-card);padding:14px;box-shadow:var(--shadow-card)}
-.remindCard h4{font-size:14px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:7px}
-.remindCard h4 
-.rline{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px dashed rgba(31,38,135,.09);cursor:pointer}
-.rline:last-child{border-bottom:none}
-.rline .rn{flex:1;min-width:0;font-size:13.5px;font-weight:600}
-.rline .rh{font-size:11px;color:var(--sub);font-weight:400;margin-top:1px}
-.rline .rd{font-size:11.5px;font-weight:700;color:var(--red);white-space:nowrap;text-align:right}
-
+#view-crm .mNode.hosp {border-left:5px solid var(--blue)}
+#view-crm .mNode.cust {font-weight:600;font-size:12.5px;padding:0 10px;background:rgba(255,255,255,.62)}
+#view-crm .mNode .cnt {font-size:11px;font-weight:600;opacity:.65;margin-left:auto}
+#view-crm .mNode .lv {width:20px;height:20px;line-height:20px;font-size:11px;border-radius:7px;flex:0 0 auto}
+#view-crm .mNode.dim {opacity:.16}
+#view-crm .admit {display:inline-block;padding:1px 8px;border-radius:9px;font-size:11px;font-weight:700;line-height:1.6;vertical-align:middle}
+#view-crm .admit.green {background:rgba(34,197,94,.16);color:#16a34a}
+#view-crm .admit.blue {background:rgba(47,124,246,.16);color:#2f7cf6}
+#view-crm .admit.orange {background:rgba(245,159,0,.18);color:#d97706}
+#view-crm .admit.purple {background:rgba(139,92,246,.16);color:#8b5cf6}
+#view-crm .remindCard h4 {font-size:14px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:7px}
+#view-crm .remindCard h4 .mini {margin-left:auto}
+#view-crm .rline {display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px dashed rgba(31,38,135,.09);cursor:pointer}
+#view-crm .rline:last-child {border-bottom:none}
+#view-crm .rline .rn {flex:1;min-width:0;font-size:13.5px;font-weight:600}
+#view-crm .rline .rh {font-size:11px;color:var(--sub);font-weight:400;margin-top:1px}
+#view-crm .rline .rd {font-size:11.5px;font-weight:700;color:var(--red);white-space:nowrap;text-align:right}
 </style>
 </head>
 <body data-page-node-id="x2BPezAdX2H5j9077nuA8h">
@@ -1476,7 +1437,7 @@ input::placeholder,textarea::placeholder{color:var(--faint)}
 <section class="view on" id="view-home">
   <div class="home-hero">
     <h1>📋 记录中心</h1>
-    <p>10 个工具 · 一本通 · 数据全部只存在这台设备的浏览器里</p>
+    <p><span class="rcCount">11</span> 个工具 · 一本通 · 数据全部只存在这台设备的浏览器里</p>
     <div class="hpill">📅 <span id="homeToday"></span> · <span id="homeBackupTip">尚未备份</span></div>
   </div>
 
@@ -1502,7 +1463,7 @@ input::placeholder,textarea::placeholder{color:var(--faint)}
 <!-- ================= 备份恢复中心（新增） ================= -->
 <section class="view" id="view-backup">
   <div class="card">
-    <h3>📦 全量备份 <span class="tag">10 个工具一起打包</span></h3>
+    <h3>📦 全量备份 <span class="tag"><span class="rcCount">11</span> 个工具一起打包</span></h3>
     <p class="muted" style="line-height:1.8">导出一个 JSON 文件。手机上如果下不下来，用「复制备份文本」粘到微信文件传输助手 / 备忘录里保存，之后用「粘贴文本恢复」粘回来也可以。</p>
     <div class="actions">
       <button class="btn" id="bkAll">⬇ 导出全量备份</button>
@@ -1566,7 +1527,7 @@ input::placeholder,textarea::placeholder{color:var(--faint)}
         <button class="btn-ghost btn" id="btnGoBackupCenter">🛠 备份中心</button>
       </div>
       <input accept=".json" class="hidden" id="allRestoreFile" type="file">
-      <p class="muted" style="margin-top:10px; line-height:1.8">备份打包全部 10 个工具的记录与设置，恢复时可选「合并」或「覆盖」。</p>
+      <p class="muted" style="margin-top:10px; line-height:1.8">备份打包全部 <span class="rcCount">11</span> 个工具的记录与设置，恢复时可选「合并」或「覆盖」。</p>
     </div>
   </details>
 
@@ -1892,6 +1853,7 @@ input::placeholder,textarea::placeholder{color:var(--faint)}
       <div data-page-node-id="eDSWPTgm555CNKA7h5SL2j" class="actions" style="margin:0">
         <input data-page-node-id="Jei0cSkMTHnNjV5auUrLPt" id="hos-input" placeholder="输入医院名称，如：南宁市第一人民医院" type="text" style="flex:1; min-width:180px">
         <button data-page-node-id="vr2JEtU30uVGoY0p52fyqZ" class="btn" id="btn-add-hos"><!--pnid:XuQUEuEaupxFrPrAoFyIoW-->添加医院</button>
+        <button class="btn btn-ghost" id="btn-sync-crm" style="white-space:nowrap">🔗 从客户管理同步</button>
       </div>
       <div data-page-node-id="eI9tYXbiLK8wyFZxj0V2OA" class="muted" style="margin:8px 0 4px"><!--pnid:A8Uwt7a99djJqMZFWK0znp-->支持「改名」（改名称，历史记录自动跟随）与「合并」（把重复医院并入另一家，记录一并转移）。</div>
       <div data-page-node-id="jxGLwhrwE9rQFQ0X8jXplP" class="scrollbox" id="hos-list" style="margin-top:8px"></div>
@@ -2634,9 +2596,9 @@ input::placeholder,textarea::placeholder{color:var(--faint)}
 
 <section class="view" id="view-crm">
   <div class="appHeader" style="position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:8px;padding:0 12px;height:var(--header-h);background:linear-gradient(135deg,rgba(112,72,232,.92),rgba(151,117,250,.92));backdrop-filter:blur(14px);color:#fff;font-weight:600;font-size:16px;border-bottom:1px solid rgba(255,255,255,.18);box-shadow:0 4px 18px rgba(31,38,135,.1)">
-    <button class="hBack" id="crmBack" style="border:none;background:rgba(255,255,255,.22);color:#fff;width:34px;height:34px;border-radius:11px;font-size:18px;line-height:1;flex:0 0 auto">‹</button>
+    <button class="hBack" id="btnBack" style="border:none;background:rgba(255,255,255,.22);color:#fff;width:34px;height:34px;border-radius:11px;font-size:18px;line-height:1;flex:0 0 auto">‹</button>
     <div class="hTitle" id="crmTitle" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">医院客户管理</div>
-    <button class="hAct" id="crmAct" style="border:none;background:rgba(255,255,255,.22);color:#fff;height:32px;padding:0 12px;border-radius:10px;font-size:13px;font-weight:600;flex:0 0 auto">＋ 新增</button>
+    <button class="hAct" id="hAct" style="border:none;background:rgba(255,255,255,.22);color:#fff;height:32px;padding:0 12px;border-radius:10px;font-size:13px;font-weight:600;flex:0 0 auto">＋ 新增</button>
   </div>
 
   <!-- ============ 视图1：医院列表 ============ -->
@@ -2688,6 +2650,74 @@ input::placeholder,textarea::placeholder{color:var(--faint)}
       </div>
     </div>
   </section>
+
+  <!-- ===== crm 底部：与其它工具打通 ===== -->
+  <section class="card" style="margin:14px 12px 0">
+    <div class="sectionTitle" style="margin:0 0 10px">与其它工具打通<small>把「医院流向」「客户产出」里已有的医院 / 客户收拢到这里统一管理</small></div>
+    <div class="actions" style="flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" id="crmLinkImport">🔗 从其它工具导入医院 / 客户</button>
+    </div>
+    <div class="stip" style="margin-top:8px">导入规则：按医院名称自动去重，已存在的不会重复添加；客户会挂到对应医院下。原工具里的数据<b>一条都不会动</b>，只是把名单同步过来。之后在这个工具的医院卡片上会显示它对应的流向 / 产出条数。</div>
+  </section>
+
+  <!-- ===== crm 底部：备份 / 导出 / 脑图 ===== -->
+  <section class="card" style="margin:14px 12px 26px">
+    <div class="sectionTitle" style="margin:0 0 10px">数据备份 / 恢复<small>全部数据存在本机浏览器，换设备前请先导出</small></div>
+    <div class="actions" style="flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" id="crmExport">⬇ 备份数据（导出 JSON）</button>
+      <button class="btn btn-ghost btn-sm" id="crmImport">📥 导入恢复</button>
+      <button class="btn btn-ghost btn-sm" id="btnXls">📊 导出 Excel</button>
+      <button class="btn btn-ghost btn-sm" id="btnMind">🧠 关系脑图</button>
+      <input type="file" id="fileIn" accept=".json" class="hidden">
+    </div>
+  </section>
+
+  <div id="modalRoot"></div>
+  <div class="toastWrap" id="crmToast"></div>
+</section>
+
+
+<!-- ================= 科室会 / 学术会议记录 ================= -->
+<section class="view" id="view-meet">
+  <div class="card" style="margin:12px">
+    <h3 style="margin-bottom:8px">本月概览</h3>
+    <div class="mGrid" id="meetStats"></div>
+  </div>
+
+  <div class="card" style="margin:12px">
+    <h3 style="margin-bottom:8px">记一场</h3>
+    <div class="formRow">
+      <div><label class="flab">日期</label><input type="date" id="mDate"></div>
+      <div><label class="flab">类型</label><select id="mType"></select></div>
+    </div>
+    <label class="flab">医院</label>
+    <input type="text" id="mHosp" list="meetHospList" placeholder="输入或选择医院，如：前海广西" autocomplete="off">
+    <datalist id="meetHospList"></datalist>
+    <div class="formRow">
+      <div><label class="flab">科室</label><input type="text" id="mDept" value="急诊科"></div>
+      <div><label class="flab">参会人数</label><input type="number" id="mPeople" inputmode="numeric" min="0" placeholder="0"></div>
+    </div>
+    <label class="flab">主题</label>
+    <input type="text" id="mTopic" placeholder="如：破伤风急诊规范化诊疗">
+    <div class="formRow">
+      <div><label class="flab">关键客户</label><input type="text" id="mKey" placeholder="如：李主任"></div>
+      <div><label class="flab">费用（元）</label><input type="number" id="mCost" inputmode="decimal" min="0" step="0.01" placeholder="0.00"></div>
+    </div>
+    <label class="flab">要点 / 结论</label>
+    <textarea id="mSummary" rows="3" style="height:auto;min-height:76px" placeholder="会上反馈、异议、达成的共识"></textarea>
+    <label class="flab">待跟进</label>
+    <input type="text" id="mNext" placeholder="如：下周三送文献、跟进提单">
+    <div style="height:10px"></div>
+    <button class="btn btn-primary btn-block" id="mSave">保存</button>
+    <button class="btn btn-ghost btn-block hidden" id="mCancel" style="margin-top:8px">取消编辑</button>
+  </div>
+
+  <div class="card" style="margin:12px">
+    <div class="sectionTitle" style="margin:0 0 8px">会议记录<small id="meetCount"></small></div>
+    <div class="chips" id="meetFilter"></div>
+    <div id="meetList" style="margin-top:8px"></div>
+    <button class="btn btn-ghost btn-block" id="mExport" style="margin-top:10px">📊 导出 Excel</button>
+  </div>
 </section>
 
 </main>
@@ -2866,12 +2896,22 @@ App.register = function (id, def) {
 /* ---------- 路由 ---------- */
 App.activate = function (id, tab) {
   const target = id || 'home';
+  const prev = App.current;
+  /* 离开首页时记住滚动位置，从工具返回时恢复，不用再重新上划 */
+  if (prev === 'home' && target !== 'home') App._homeScroll = window.scrollY || window.pageYOffset || 0;
   document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
   const view = App.$('view-' + target);
   if (view) view.classList.add('on');
   App.current = target;
   App.currentTab = tab || null;
-  window.scrollTo(0, 0);
+  if (target === 'home') {
+    const y = App._homeScroll || 0;
+    window.scrollTo(0, y);
+    /* 首页渲染后高度可能变化，下一帧再校正一次 */
+    requestAnimationFrame(function () { window.scrollTo(0, App._homeScroll || 0); });
+  } else {
+    window.scrollTo(0, 0);
+  }
 
   const back = App.$('btnBackHome');
   const title = App.$('hTitle');
@@ -2953,7 +2993,7 @@ App.renderHome = function () {
 
 /* ---------- 总备份 / 恢复 ---------- */
 App.BACKUP_KEYS = {
-  flow: ['hospital_flow_records_v1'],
+  flow: ['hospital_flow_records_v1', 'hosp-flow-targets'],
   output: ['cust_output_v1'],
   daily: ['dailyCostBook.v1'],
   energy: ['yuanup_records_v1', 'yuanup_settings_v1', 'yuanup_next_start_v1'],
@@ -2962,6 +3002,7 @@ App.BACKUP_KEYS = {
   poop: ['ev_poop_records'],
   period: ['menstrual_records_v1'],
   crm: ['hosp_cust_mgr_v1'],
+  meet: ['meet_records_v1'],
 };
 App.getAllLS = function () {
   const out = {};
@@ -3072,6 +3113,79 @@ App.mergeLSValue = function (k, incoming) {
   } catch (e) { return incoming; }
 };
 
+/* ---------- 工具数量（首页/备份页文案统一，加工具后自动跟着变） ---------- */
+App.toolCount = function () { return (App.order && App.order.length) || 0; };
+App.syncToolCount = function () {
+  var n = App.toolCount();
+  if (!n) return;
+  Array.prototype.forEach.call(document.querySelectorAll('.rcCount'), function (e) { e.textContent = n; });
+};
+
+/* ---------- 跨工具：医院 / 客户主数据（以「医院客户管理」为准） ---------- */
+App.normName = function (s) {
+  return String(s == null ? '' : s).trim()
+    .replace(/\s+/g, '')
+    .replace(/[（）()【】\[\]]/g, '')
+    .replace(/^广西壮族自治区/, '')
+    .toLowerCase();
+};
+App.crmDB = function () {
+  try {
+    var o = JSON.parse(localStorage.getItem('hosp_cust_mgr_v1') || 'null');
+    if (o && Array.isArray(o.hospitals) && Array.isArray(o.customers)) return o;
+  } catch (e) {}
+  return null;
+};
+App.crmHospNames = function () {
+  var o = App.crmDB();
+  return o ? o.hospitals.map(function (x) { return x.name; }).filter(Boolean) : [];
+};
+/* 其它工具里出现过的医院名（用于导入比对） */
+App.otherToolHosps = function () {
+  var out = [];
+  try {
+    var fr = JSON.parse(localStorage.getItem('hospital_flow_records_v1') || '[]');
+    (Array.isArray(fr) ? fr : []).forEach(function (r) { if (r && r.hospital) out.push(String(r.hospital).trim()); });
+  } catch (e) {}
+  try {
+    var o = JSON.parse(localStorage.getItem('cust_output_v1') || 'null');
+    if (o && Array.isArray(o.hospitals)) o.hospitals.forEach(function (x) { if (x && x.name) out.push(String(x.name).trim()); });
+  } catch (e) {}
+  var seen = {}, r2 = [];
+  out.forEach(function (n) { var k = App.normName(n); if (n && !seen[k]) { seen[k] = 1; r2.push(n); } });
+  return r2;
+};
+/* 规范名 -> { flowN, flowQty, outN, outQty }：实时从其它工具读，不复制、不改写它们的数据 */
+App.hospStats = function () {
+  var m = {};
+  function put(name) {
+    var k = App.normName(name);
+    if (!k) return null;
+    if (!m[k]) m[k] = { flowN: 0, flowQty: 0, outN: 0, outQty: 0 };
+    return m[k];
+  }
+  try {
+    var fr = JSON.parse(localStorage.getItem('hospital_flow_records_v1') || '[]');
+    (Array.isArray(fr) ? fr : []).forEach(function (r) {
+      var s = put(r && r.hospital); if (!s) return;
+      s.flowN++; s.flowQty += Number(r.quantity) || 0;
+    });
+  } catch (e) {}
+  try {
+    var o = JSON.parse(localStorage.getItem('cust_output_v1') || 'null');
+    if (o && Array.isArray(o.records)) {
+      var hn = {}, cn = {};
+      (o.hospitals || []).forEach(function (x) { if (x) hn[x.id] = x.name; });
+      (o.customers || []).forEach(function (x) { if (x) cn[x.id] = x.name; });
+      o.records.forEach(function (r) {
+        var s = put(hn[r.hospitalId]); if (!s) return;
+        s.outN++; s.outQty += Number(r.qty) || 0;
+      });
+    }
+  } catch (e) {}
+  return m;
+};
+
 /* ---------- 启动 ---------- */
 document.addEventListener('DOMContentLoaded', () => {
   App.$('btnBackHome').addEventListener('click', App.goHome);
@@ -3096,6 +3210,57 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     if (ok) App.applyAllRestore('overwrite');
   });
+  /* ---------- 外观主题 ---------- */
+  App.applyTheme = function (mode) {
+    try {
+      localStorage.setItem('rc_theme', mode);
+      const dark = mode === 'dark' ||
+        (mode === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.documentElement.classList.toggle('rc-dark', dark);
+    } catch (e) {}
+  };
+  App.renderThemeCard = function () {
+    const box = App.$('view-me');
+    if (!box) return;
+    let card = App.$('rcThemeCard');
+    if (!card) {
+      card = document.createElement('div');
+      card.className = 'card'; card.id = 'rcThemeCard';
+      card.style.margin = '12px';
+      card.innerHTML = '<h3 style="margin-bottom:8px">🌗 外观</h3>'
+        + '<div class="actions" style="flex-wrap:wrap;margin:0">'
+        + [['auto', '跟随系统'], ['light', '浅色'], ['dark', '深色']].map(function (p) {
+          return '<button class="btn btn-ghost" data-theme="' + p[0] + '" style="flex:1;min-width:88px">' + p[1] + '</button>';
+        }).join('')
+        + '</div><div class="muted" style="margin-top:8px">默认跟随手机系统的深色模式，也可以在这里固定成浅色或深色。</div>';
+      card.addEventListener('click', function (e) {
+        const b = e.target.closest ? e.target.closest('[data-theme]') : null;
+        if (!b) return;
+        const m = b.getAttribute('data-theme');
+        App.applyTheme(m);
+        Array.prototype.forEach.call(card.querySelectorAll('[data-theme]'), function (x) {
+          x.className = 'btn ' + (x.getAttribute('data-theme') === m ? '' : 'btn-ghost');
+        });
+      });
+      box.appendChild(card);
+    }
+    let cur = 'auto';
+    try { cur = localStorage.getItem('rc_theme') || 'auto'; } catch (e) {}
+    Array.prototype.forEach.call(card.querySelectorAll('[data-theme]'), function (x) {
+      x.className = 'btn ' + (x.getAttribute('data-theme') === cur ? '' : 'btn-ghost');
+    });
+  };
+  const _renderMe = App.renderMe;
+  App.renderMe = function () {
+    const r = _renderMe.apply(this, arguments);
+    try {
+      const c = App.$('rcThemeCard'); if (c) c.remove();
+      App.renderThemeCard();
+    } catch (e) {}
+    return r;
+  };
+
+  App.syncToolCount();
   App.activate('home');
 });
 </script>
@@ -3365,7 +3530,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function buildDatalist() {
     const agg = buildAgg();
-    $('hospList').innerHTML = sortedHosps(agg).map(h => '<option value="' + escapeHtml(h) + '">').join('');
+    let _hNames = sortedHosps(agg);
+    try {
+      if (typeof App.crmHospNames === 'function') {
+        const _seen = {}; _hNames.forEach(n => { _seen[App.normName(n)] = 1; });
+        App.crmHospNames().forEach(n => { const k = App.normName(n); if (n && !_seen[k]) { _seen[k] = 1; _hNames.push(n); } });
+      }
+    } catch (e) { }
+    $('hospList').innerHTML = _hNames.map(h => '<option value="' + escapeHtml(h) + '">').join('');
   }
   function updateMiniStats() {
     const agg = buildAgg();
@@ -4256,6 +4428,25 @@ document.addEventListener('DOMContentLoaded', () => {
       if (b.dataset.delhos) { delHos(b.dataset.delhos); return; }
       if (b.dataset.delcust) { delCust(b.dataset.delcust); return; }
     });
+    $('btn-sync-crm').onclick = () => {
+      const o = (typeof App.crmDB === 'function') ? App.crmDB() : null;
+      if (!o || !o.hospitals.length) { toast('「医院客户管理」里还没有医院'); return; }
+      let nh = 0, nc = 0;
+      o.hospitals.forEach(hh => {
+        const n = String((hh && hh.name) || '').trim(); if (!n) return;
+        let t = DB.hospitals.find(x => App.normName(x.name) === App.normName(n));
+        if (!t) { t = { id: uid(), name: n }; DB.hospitals.push(t); nh++; }
+        (o.customers || []).forEach(c => {
+          if (!c || c.hospId !== hh.id) return;
+          const cn = String(c.name || '').trim(); if (!cn) return;
+          if (DB.customers.some(x => x.hospitalId === t.id && App.normName(x.name) === App.normName(cn))) return;
+          DB.customers.push({ id: uid(), name: cn, hospitalId: t.id });
+          nc++;
+        });
+      });
+      save(); renderSettings();
+      toast(nh || nc ? ('已同步：医院 ' + nh + ' 家 · 客户 ' + nc + ' 位') : '没有发现新的医院或客户');
+    };
     $('btn-add-hos').onclick = () => {
       const v = $('hos-input').value.trim();
       if (!v) { toast('请输入医院名称'); return; }
@@ -9416,7 +9607,7 @@ document.addEventListener('DOMContentLoaded', () => {
       app: 'record-center', version: 2, exported: new Date().toISOString(),
       modules: App.getAllLS()
     };
-    await App.exportBackup(data, '全部 10 个工具');
+    await App.exportBackup(data, '全部 ' + App.toolCount() + ' 个工具');
   };
   App.exportBackup = async function (data, label) {
     const text = JSON.stringify(data);
@@ -9572,6 +9763,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const tipEl = App.$('homeBackupTip');
     if (tipEl) tipEl.textContent = ago ? (ago + '备份过') : '尚未备份';
+    App.renderBackupBar(last, ago);
+  };
+
+  /* 超过 7 天（或从未）没备份，且本机确实有数据 —— 首页顶部挂一条提醒 */
+  App.renderBackupBar = function (last, ago) {
+    try {
+      const home = App.$('view-home');
+      if (!home) return;
+      let bar = App.$('rcBkBar');
+      const days = last ? Math.floor((Date.now() - new Date(last).getTime()) / 86400000) : 9999;
+      const hasData = Object.keys(App.BACKUP_KEYS || {}).some(m =>
+        (App.BACKUP_KEYS[m] || []).some(k => { try { return localStorage.getItem(k) != null; } catch (e) { return false; } }));
+      const offToday = localStorage.getItem('rc_bk_bar_off') === new Date().toDateString();
+      const need = hasData && days >= 7 && !offToday;
+      if (!need) { if (bar) bar.remove(); return; }
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'rcBkBar';
+        bar.style.cssText = 'margin:10px 12px 0;padding:11px 13px;border-radius:14px;display:flex;align-items:center;gap:10px;'
+          + 'background:linear-gradient(135deg,#fff4e6,#ffe8cc);border:1px solid #ffd8a8;color:#8a5a00;font-size:13px;line-height:1.5;cursor:pointer';
+        bar.innerHTML = '<span style="font-size:18px">⚠️</span>'
+          + '<span style="flex:1">' + (ago ? '已经 <b>' + days + ' 天</b>没备份了' : '还<b>没有备份过</b>')
+          + '，数据只存在这台设备，清缓存或换手机就没了。<b>点这里去备份</b></span>'
+          + '<button id="rcBkBarX" style="border:none;background:rgba(0,0,0,.06);color:#8a5a00;border-radius:8px;padding:6px 9px;font-size:12px;white-space:nowrap">今天不提醒</button>';
+        home.insertBefore(bar, home.firstChild);
+        bar.addEventListener('click', e => {
+          if (e.target && e.target.id === 'rcBkBarX') { try { localStorage.setItem('rc_bk_bar_off', new Date().toDateString()); } catch (er) {} bar.remove(); return; }
+          App.activate('backup');
+        });
+      } else {
+        const tx = bar.querySelector('span[style*="flex"]');
+        if (tx) tx.innerHTML = (ago ? '已经 <b>' + days + ' 天</b>没备份了' : '还<b>没有备份过</b>')
+          + '，数据只存在这台设备，清缓存或换手机就没了。<b>点这里去备份</b>';
+      }
+    } catch (e) {}
   };
 
   App.getOrder = function () {
@@ -9882,6 +10108,8 @@ App.register('crm', {
       return;
     }
     const manual = DB.settings.hospSort === 'manual';
+    let XSTATS = {};
+    try { XSTATS = App.hospStats() || {}; } catch (e) {}
     $('crmHospList').innerHTML = list.map((h, i) => {
       const cs = custsOf(h.id);
       const mc = q ? cs.filter(c => (c.name || '').toLowerCase().includes(q) || (c.phone || '').includes(q)) : [];
@@ -9893,11 +10121,20 @@ App.register('crm', {
       if (a) meta.push('🔴 核心 ' + a);
       const emer = cs.filter(c => (c.dept || '').indexOf('急诊') >= 0).length;
       if (emer) meta.push('🚑 急诊 ' + emer);
+      const xs = XSTATS[App.normName(h.name)];
+      let xline = '';
+      if (xs && (xs.flowN || xs.outN)) {
+        const seg = [];
+        if (xs.flowN) seg.push('流向 ' + xs.flowN + ' 条 / 累计 ' + xs.flowQty);
+        if (xs.outN) seg.push('产出 ' + xs.outN + ' 条 / ' + xs.outQty);
+        xline = '🔗 ' + seg.join(' · ');
+      }
       return '<div class="item">'
         + '<div class="info" data-hosp="' + h.id + '">'
         + '<div class="nm">🏥 ' + esc(h.name) + (h.level ? ' <span class="badge">' + esc(h.level) + '</span>' : '') + '</div>'
         + '<div class="mt">' + meta.join(' · ') + '</div>'
         + (h.note ? '<div class="mt">📝 ' + esc(h.note) + '</div>' : '')
+        + (xline ? '<div class="mt xlink">' + esc(xline) + '</div>' : '')
         + (mc.length ? '<div class="mt">🔎 命中客户：' + mc.slice(0, 4).map(c => esc(c.name)).join('、') + (mc.length > 4 ? ' 等 ' + mc.length + ' 位' : '') + '</div>' : '')
         + '</div>'
         + '<div class="side">'
@@ -10516,6 +10753,78 @@ App.register('crm', {
   }
 
   /* ================= 启动 ================= */
+  /* ---------- 从其它工具导入医院 / 客户：只同步名单，对方数据一条不动 ---------- */
+  function importFromTools(silent) {
+    let addH = 0, addC = 0;
+    try {
+      const fr = JSON.parse(localStorage.getItem('hospital_flow_records_v1') || '[]');
+      (Array.isArray(fr) ? fr : []).forEach(r => {
+        const n = String((r && r.hospital) || '').trim(); if (!n) return;
+        if (DB.hospitals.some(x => App.normName(x.name) === App.normName(n))) return;
+        DB.hospitals.push({ id: uid(), name: n, level: '', note: '', admit: '', stock: '', created: Date.now(), order: DB.hospitals.length });
+        addH++;
+      });
+    } catch (e) { }
+    try {
+      const o = JSON.parse(localStorage.getItem('cust_output_v1') || 'null');
+      if (o && Array.isArray(o.hospitals)) {
+        o.hospitals.forEach(hh => {
+          const n = String((hh && hh.name) || '').trim(); if (!n) return;
+          let t = DB.hospitals.find(x => App.normName(x.name) === App.normName(n));
+          if (!t) {
+            t = { id: uid(), name: n, level: '', note: '', admit: '', stock: '', created: Date.now(), order: DB.hospitals.length };
+            DB.hospitals.push(t); addH++;
+          }
+          (o.customers || []).forEach(c => {
+            if (!c || c.hospitalId !== hh.id) return;
+            const cn = String(c.name || '').trim(); if (!cn) return;
+            if (DB.customers.some(x => x.hospId === t.id && App.normName(x.name) === App.normName(cn))) return;
+            DB.customers.push({
+              id: uid(), hospId: t.id, name: cn, level: c.level || 'C', title: c.title || '',
+              dept: c.dept || '急诊科', phone: c.phone || '', needs: Array.isArray(c.needs) ? c.needs : [], comm: c.comm || '',
+              products: Array.isArray(c.products) ? c.products : (c.products ? [c.products] : []),
+              birthday: c.birthday || '', wechat: c.wechat || '',
+              note: '由「客户产出」同步', created: Date.now(), order: custsOf(t.id).length, follows: []
+            });
+            addC++;
+          });
+        });
+      }
+    } catch (e) { }
+    save();
+    try { renderHospView(); } catch (e) { }
+    if (!silent) toast(addH || addC ? ('已同步：医院 ' + addH + ' 家 · 客户 ' + addC + ' 位') : '没有发现新的医院或客户');
+    return { h: addH, c: addC };
+  }
+  try { App.crmImport = importFromTools; } catch (e) {}
+
+  $('crmLinkImport').addEventListener('click', () => {
+    let others = [];
+    try { others = App.otherToolHosps() || []; } catch (er) {}
+    if (!others.length) { toast('其它工具里还没录入过医院'); return; }
+    ask('同步医院 / 客户？', '在「医院流向」「客户产出」里发现 ' + others.length + ' 家医院：\n'
+      + others.slice(0, 12).join('、') + (others.length > 12 ? ' 等' : '')
+      + '\n\n按名称去重后加入本工具（已有的不重复添加）。\n原工具里的数据一条都不会改动。')
+      .then(ok => { if (ok) importFromTools(); });
+  });
+
+  /* 首次进入且本工具为空、其它工具却有医院 —— 主动问一次 */
+  try {
+    if (!DB.hospitals.length && !DB.customers.length && !localStorage.getItem('crm_link_asked')) {
+      let others = [];
+      try { others = App.otherToolHosps() || []; } catch (er) {}
+      if (others.length) {
+        localStorage.setItem('crm_link_asked', '1');
+        setTimeout(() => {
+          ask('把已有医院收拢过来？', '检测到其它工具里有 ' + others.length + ' 家医院：\n'
+            + others.slice(0, 10).join('、') + (others.length > 10 ? ' 等' : '')
+            + '\n\n要同步到「医院客户管理」统一管吗？原工具数据不变。')
+            .then(ok => { if (ok) importFromTools(); });
+        }, 600);
+      }
+    }
+  } catch (e) { }
+
   $('btnXls').addEventListener('click', exportXls);
   $('btnMind').addEventListener('click', () => { go('vMind'); renderMind(); fitMind(); });
   renderHospView();
@@ -10525,6 +10834,220 @@ App.register('crm', {
   },
   onShow() { const a = this.api; if (a && a.renderHospView) a.renderHospView(); }
 });
+  /* ============================================================
+     模块：科室会 / 学术会议记录（localStorage: meet_records_v1）
+     ============================================================ */
+  (function () {
+    const KEY = 'meet_records_v1';
+    const TYPES = ['科室会', '学术会', '院内推广', '专家交流', '区域会', '其他'];
+    let recs = load();
+    let editing = null;
+    let filterType = '';
+
+    function load() {
+      try { const r = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(r) ? r : []; }
+      catch (e) { return []; }
+    }
+    function save() {
+      try { localStorage.setItem(KEY, JSON.stringify(recs)); }
+      catch (e) { App.toast('保存失败：本机存储不可用'); }
+    }
+    function uid() { return 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    function today() {
+      const d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    function num(v) { const n = Number(v); return isNaN(n) ? 0 : n; }
+    function money(n) { return num(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+    function renderStats() {
+      const ym = today().slice(0, 7);
+      const mo = recs.filter(r => String(r.date || '').slice(0, 7) === ym);
+      const people = mo.reduce((s, r) => s + num(r.people), 0);
+      const cost = mo.reduce((s, r) => s + num(r.cost), 0);
+      const hs = {}; mo.forEach(r => { if (r.hosp) hs[r.hosp] = 1; });
+      const cell = (v, k) => '<div class="sStat"><div style="font-size:18px;font-weight:800;color:var(--text)">' + v + '</div><div style="font-size:11px;color:var(--sub);margin-top:3px">' + k + '</div></div>';
+      App.$('meetStats').innerHTML =
+        cell(mo.length, '本月场次') +
+        cell(Object.keys(hs).length, '覆盖医院') +
+        cell(people, '参会人次') +
+        cell('¥' + money(cost), '本月费用') +
+        cell(people ? '¥' + (cost / people).toFixed(1) : '—', '人均费用') +
+        cell(recs.length, '累计场次');
+    }
+
+    function renderFilter() {
+      App.$('meetFilter').innerHTML = [''].concat(TYPES).map(t =>
+        '<button class="chip' + (filterType === t ? ' on' : '') + '" data-ft="' + esc(t) + '">' + (t || '全部') + '</button>'
+      ).join('');
+    }
+
+    function renderList() {
+      let list = recs.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+      if (filterType) list = list.filter(r => (r.type || '') === filterType);
+      App.$('meetCount').textContent = '共 ' + recs.length + ' 场' + (filterType ? '（已筛选 ' + list.length + '）' : '');
+      if (!list.length) {
+        App.$('meetList').innerHTML = '<div class="emptyTip">还没有记录<br>在上面填一场，点「保存」</div>';
+        return;
+      }
+      let html = '', curYm = '';
+      list.forEach(r => {
+        const ym = String(r.date || '').slice(0, 7);
+        if (ym !== curYm) { curYm = ym; html += '<div class="mMonth">' + (ym || '未填日期') + '</div>'; }
+        const meta = [];
+        if (r.date) meta.push(esc(r.date));
+        if (num(r.people)) meta.push('👥 ' + num(r.people) + ' 人');
+        if (num(r.cost)) meta.push('💰 ¥' + money(r.cost));
+        if (r.keyPerson) meta.push('👤 ' + esc(r.keyPerson));
+        html += '<div class="mItem">'
+          + '<div class="mHead"><div class="mTitle">' + esc(r.type || '会议') + ' · ' + esc(r.hosp || '未填医院')
+          + (r.dept ? ' <span class="badge">' + esc(r.dept) + '</span>' : '') + '</div></div>'
+          + '<div class="mMeta">' + (meta.join(' · ') || '—') + '</div>'
+          + (r.topic ? '<div class="mLine">📌 ' + esc(r.topic) + '</div>' : '')
+          + (r.summary ? '<div class="mLine">📝 ' + esc(r.summary) + '</div>' : '')
+          + (r.next ? '<div class="mNext">➡️ 待跟进：' + esc(r.next) + '</div>' : '')
+          + '<div class="mBtns"><button data-medit="' + r.id + '">编辑</button>'
+          + '<button class="danger" data-mdel="' + r.id + '">删除</button></div>'
+          + '</div>';
+      });
+      App.$('meetList').innerHTML = html;
+    }
+
+    function fillHospList() {
+      const dl = App.$('meetHospList');
+      if (!dl) return;
+      let names = [];
+      try { if (typeof App.crmHospNames === 'function') names = App.crmHospNames() || []; } catch (e) {}
+      recs.forEach(r => { if (r.hosp && names.indexOf(r.hosp) < 0) names.push(r.hosp); });
+      dl.innerHTML = names.map(n => '<option value="' + esc(n) + '">').join('');
+    }
+
+    function clearForm() {
+      editing = null;
+      App.$('mDate').value = today();
+      App.$('mType').value = TYPES[0];
+      App.$('mHosp').value = '';
+      App.$('mDept').value = '急诊科';
+      App.$('mPeople').value = '';
+      App.$('mTopic').value = '';
+      App.$('mKey').value = '';
+      App.$('mCost').value = '';
+      App.$('mSummary').value = '';
+      App.$('mNext').value = '';
+      App.$('mCancel').classList.add('hidden');
+      App.$('mSave').textContent = '保存';
+    }
+
+    function fillForm(id) {
+      const r = recs.find(x => x.id === id); if (!r) return;
+      editing = id;
+      App.$('mDate').value = r.date || today();
+      App.$('mType').value = r.type || TYPES[0];
+      App.$('mHosp').value = r.hosp || '';
+      App.$('mDept').value = r.dept || '急诊科';
+      App.$('mPeople').value = r.people || '';
+      App.$('mTopic').value = r.topic || '';
+      App.$('mKey').value = r.keyPerson || '';
+      App.$('mCost').value = r.cost || '';
+      App.$('mSummary').value = r.summary || '';
+      App.$('mNext').value = r.next || '';
+      App.$('mCancel').classList.remove('hidden');
+      App.$('mSave').textContent = '保存修改';
+    }
+
+    function onSave() {
+      const hosp = App.$('mHosp').value.trim();
+      if (!hosp) { App.toast('医院不能为空'); App.$('mHosp').focus(); return; }
+      const data = {
+        date: App.$('mDate').value || today(),
+        type: App.$('mType').value || TYPES[0],
+        hosp: hosp,
+        dept: App.$('mDept').value.trim(),
+        people: num(App.$('mPeople').value),
+        topic: App.$('mTopic').value.trim(),
+        keyPerson: App.$('mKey').value.trim(),
+        cost: num(App.$('mCost').value),
+        summary: App.$('mSummary').value.trim(),
+        next: App.$('mNext').value.trim()
+      };
+      if (editing) {
+        const r = recs.find(x => x.id === editing);
+        if (r) Object.assign(r, data);
+        App.toast('已保存修改');
+      } else {
+        data.id = uid(); data.created = Date.now();
+        recs.push(data);
+        App.toast('已记录：' + data.type + ' · ' + hosp);
+      }
+      save();
+      clearForm(); renderAll();
+    }
+
+    function renderAll() { renderStats(); renderFilter(); renderList(); fillHospList(); }
+
+    function exportXls() {
+      if (typeof XLSX === 'undefined') { App.toast('导出组件未加载'); return; }
+      const rows = [['日期', '类型', '医院', '科室', '主题', '参会人数', '关键客户', '费用(元)', '要点/结论', '待跟进']];
+      recs.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).forEach(r => {
+        rows.push([r.date || '', r.type || '', r.hosp || '', r.dept || '', r.topic || '',
+          num(r.people), r.keyPerson || '', num(r.cost), r.summary || '', r.next || '']);
+      });
+      try {
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, '会议记录');
+        XLSX.writeFile(wb, '科室会学术会记录_' + today() + '.xlsx');
+      } catch (e) { App.toast('导出失败：' + e.message); }
+    }
+
+    App.register('meet', {
+      name: '科室会 / 学术会',
+      icon: '🎤',
+      color: '#0e9cb6',
+      soft: 'var(--cyan-soft)',
+      desc: '会议场次 · 覆盖医院 · 费用与跟进',
+      hTip: '科室会 · 学术活动记录',
+      tabs: [],
+      init() {
+        App.$('mType').innerHTML = TYPES.map(t => '<option value="' + t + '">' + t + '</option>').join('');
+        App.$('mDate').value = today();
+        App.$('mSave').addEventListener('click', onSave);
+        App.$('mCancel').addEventListener('click', () => { clearForm(); });
+        App.$('mExport').addEventListener('click', exportXls);
+        App.$('meetFilter').addEventListener('click', e => {
+          const b = e.target.closest ? e.target.closest('[data-ft]') : null;
+          if (!b) return;
+          filterType = b.getAttribute('data-ft') || '';
+          renderFilter(); renderList();
+        });
+        App.$('meetList').addEventListener('click', e => {
+          const ed = e.target.closest ? e.target.closest('[data-medit]') : null;
+          if (ed) { fillForm(ed.getAttribute('data-medit')); window.scrollTo(0, 0); return; }
+          const dl = e.target.closest ? e.target.closest('[data-mdel]') : null;
+          if (dl) {
+            const id = dl.getAttribute('data-mdel');
+            const r = recs.find(x => x.id === id);
+            if (!r) return;
+            if (!window.confirm('删除这条记录？\n' + (r.date || '') + ' ' + (r.type || '') + ' · ' + (r.hosp || '') + '\n删除后不能恢复。')) return;
+            recs = recs.filter(x => x.id !== id);
+            save(); renderAll(); App.toast('已删除');
+          }
+        });
+        renderAll();
+      },
+      onShow() { renderAll(); },
+      homeMeta() {
+        if (!recs.length) return '暂无记录';
+        const ym = today().slice(0, 7);
+        const n = recs.filter(r => String(r.date || '').slice(0, 7) === ym).length;
+        return '本月 <b>' + n + '</b> 场 · 累计 <b>' + recs.length + '</b> 场';
+      }
+    });
+  })();
+
   App.register('backup', { name: '备份与恢复', icon: '💾', color: '#1f7a5c', soft: 'var(--blue-soft)', desc: '', hTip: '备份 · 恢复 · 数据概览', tabs: [], init() { }, onShow() { App.renderBackupPage(); } });
   App.register('me', { name: '我的', icon: '👤', color: '#7048e8', soft: 'var(--purple-soft)', desc: '', hTip: '存储与说明', tabs: [], init() { const ol = App.$('meOrderList'); if (ol) ol.addEventListener('click', function(e){ const btn = e.target.closest('[data-move]'); if(!btn) return; const p = btn.dataset.move.split(':'); App.moveTool(p[0], p[1] === 'up' ? -1 : 1); }); const rs = App.$('meOrderReset'); if (rs) rs.addEventListener('click', App.resetOrder); }, onShow() { App.renderMe(); } });
   /* 这两个页面不出现在首页工具宫格里 */
@@ -10674,7 +11197,7 @@ App.register('crm', {
     on('bkClear', 'click', async () => {
       const ok = await App.ask({
         title: '清空全部数据',
-        msg: '将删除全部 10 个工具的记录与设置，且无法恢复。\n建议先「导出全量备份」。确定继续吗？',
+        msg: '将删除全部 ' + App.toolCount() + ' 个工具的记录与设置，且无法恢复。\n建议先「导出全量备份」。确定继续吗？',
         buttons: [{ text: '取消', cls: 'askCancel', value: false }, { text: '我已备份，清空', cls: 'askDanger', value: true }]
       });
       if (!ok) return;
