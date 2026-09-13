@@ -214,6 +214,16 @@ html.rc-dark .mod-card{background:rgba(40,48,60,.6)!important;border-color:rgba(
 html.rc-dark .monthTable,html.rc-dark .cal,html.rc-dark .pd-grid{background:var(--card-strong)!important}
 html.rc-dark .xlink{color:#8ab4ff!important}
 html.rc-dark .tag,html.rc-dark .badge{background:#26303d!important;color:var(--text)!important}
+  /* 进销存 */
+  .segTabs{display:flex;gap:8px;margin:4px 0 12px}
+  .seg{flex:1;padding:11px 8px;border:1px solid #e3e8ef;background:#fff;border-radius:10px;font-size:14px;color:#465;cursor:pointer;transition:.15s}
+  .seg.on{background:#2f7cf6;color:#fff;border-color:#2f7cf6}
+  .recItem.low{background:#fff4f4}
+  .recItem.low .qty{color:#e23;font-weight:600}
+  .miniInput{border:1px solid #e3e8ef;border-radius:6px;padding:4px 6px;width:56px;font-size:13px}
+  /* 资源投入 */
+  .invBadge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:10px;background:#fff7e6;color:#b8860b;font-size:11px;font-weight:600;vertical-align:middle}
+  .miniSel{border:1px solid #e3e8ef;border-radius:8px;padding:5px 8px;font-size:13px;background:#fff;max-width:160px}
 </style>
 <style data-page-node-id="rQczrSV92zpvVjlxNH3hZ2" data-pnid-children="eA8kpM74QpbYO1lp47FRpZ">
 /* ============================================================
@@ -1788,6 +1798,56 @@ details.fold .fbody{padding:0 16px 16px}
     </div>
   </div>
 
+  <!-- ===== 进销存 ===== -->
+  <div class="panel" id="ftab-stock">
+    <div class="segTabs" id="stockSeg">
+      <button type="button" class="seg on" data-type="in">进货（入库）</button>
+      <button type="button" class="seg" data-type="out">销量（出库）</button>
+    </div>
+    <div class="card">
+      <div class="grid2">
+        <div><label class="flab">医院名称 *</label><input id="stkHosp" list="hospList" placeholder="选/填医院" autocomplete="off"></div>
+        <div><label class="flab">产品 / 品规 *</label><input id="stkProd" list="stkProdList" placeholder="如 斯泰度塔单抗" autocomplete="off"></div>
+        <div><label class="flab">数量 *</label><input id="stkQty" type="number" min="0" step="any" placeholder="如 50"></div>
+        <div><label class="flab">日期 *</label><input id="stkDate" type="date"></div>
+      </div>
+      <input id="stkNote" placeholder="备注（选填）" style="margin-top:8px;width:100%">
+      <div class="ov-init-row" style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="muted">期初库存（按上方医院+产品，可选）</span>
+        <input id="stkInit" type="number" min="0" step="any" placeholder="如 100" style="width:120px">
+        <button class="btn-ghost btn btn-sm" id="stkSetInit">设期初</button>
+      </div>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn btn-primary" id="stkAdd">保存记录</button>
+        <button class="btn-ghost btn" id="stkClear">清空</button>
+      </div>
+    </div>
+    <div class="stat-grid" style="padding:6px 0">
+      <div class="stat"><div class="v" id="stkSumHosp">0</div><div class="k">涉及医院</div></div>
+      <div class="stat"><div class="v" id="stkSumProd">0</div><div class="k">产品品种</div></div>
+      <div class="stat"><div class="v" id="stkSumIn">0</div><div class="k">累计进货</div></div>
+      <div class="stat"><div class="v" id="stkSumOut">0</div><div class="k">累计销量</div></div>
+      <div class="stat"><div class="v" id="stkSumNow">0</div><div class="k">当前总库存</div></div>
+      <div class="stat"><div class="v" id="stkLow">0</div><div class="k">偏低预警</div></div>
+    </div>
+    <div class="sectionTitle">库存总表<small>实时计算：当前库存 = 累计进货 − 累计销量</small></div>
+    <div id="stkTable"></div>
+    <datalist id="stkProdList"></datalist>
+  </div>
+
+  <!-- ===== 进销流水 ===== -->
+  <div class="panel" id="ftab-flow">
+    <div class="miniBar">
+      <button class="miniBtn" id="stkFAll">全部</button>
+      <button class="miniBtn" id="stkFIn">只看进货</button>
+      <button class="miniBtn" id="stkFOut">只看销量</button>
+      <button class="miniBtn" id="stkFMonth">本月</button>
+      <button class="miniBtn" id="stkFWeek">本周</button>
+      <button class="miniBtn" id="stkExp">导出 Excel</button>
+    </div>
+    <div id="stkFlowList"></div>
+  </div>
+
   <!--pnid:pLTA4F62zvt5ba1yM1IOf0--><!-- 应用内弹窗 -->
   <div data-page-node-id="hOW8dHKu4h4TbBc4ZdxzJh" class="modal" id="modalAsk">
     <div data-page-node-id="vPninhpFA5dAw7zB5Ns0VA" class="modalCard">
@@ -2716,6 +2776,53 @@ details.fold .fbody{padding:0 16px 16px}
   </div>
 </section>
 
+<section class="view" id="view-invest">
+  <div class="panel on" id="iview-entry">
+    <div class="card">
+      <div class="grid2">
+        <div><label class="flab">医院名称</label><input id="invHosp" list="invHospList" placeholder="选/填医院" autocomplete="off"></div>
+        <div><label class="flab">客户姓名</label><input id="invCust" list="invCustList" placeholder="选/填客户" autocomplete="off"></div>
+        <div><label class="flab">投入类型</label><input id="invType" list="invTypeList" placeholder="如 学术会 / 赞助 / 礼品" autocomplete="off"></div>
+        <div><label class="flab">金额(元)</label><input id="invAmt" type="number" min="0" step="any" placeholder="如 2000"></div>
+        <div><label class="flab">日期</label><input id="invDate" type="date"></div>
+        <div><label class="flab">备注</label><input id="invNote" placeholder="选填" autocomplete="off"></div>
+      </div>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn btn-primary" id="invAdd">保存记录</button>
+        <button class="btn-ghost btn" id="invCopy">复制上一条</button>
+        <button class="btn-ghost btn" id="invClear">清空</button>
+      </div>
+    </div>
+    <div class="muted" style="margin-top:8px">类型会自动记忆，下次直接选；「复制上一条」可快速填入上次内容。</div>
+  </div>
+  <div class="panel" id="iview-detail">
+    <div class="miniBar">
+      <button class="miniBtn" id="invFAll">全部</button>
+      <button class="miniBtn" id="invFWeek">本周</button>
+      <button class="miniBtn" id="invFMonth">本月</button>
+      <select id="invTypeSel" class="miniSel"><option value="">全部类型</option></select>
+    </div>
+    <div id="invList"></div>
+  </div>
+  <div class="panel" id="iview-summary">
+    <div class="stat-grid" style="padding:6px 0">
+      <div class="stat"><div class="v" id="invSumCount">0</div><div class="k">投入笔数</div></div>
+      <div class="stat"><div class="v" id="invSumTotal">¥0</div><div class="k">累计金额</div></div>
+      <div class="stat"><div class="v" id="invSumMonth">¥0</div><div class="k">本月金额</div></div>
+      <div class="stat"><div class="v" id="invSumWeek">¥0</div><div class="k">本周金额</div></div>
+    </div>
+    <div class="sectionTitle">按医院汇总</div>
+    <div id="invByHosp"></div>
+    <div class="sectionTitle">按客户汇总</div>
+    <div id="invByCust"></div>
+    <div class="sectionTitle">按类型汇总</div>
+    <div id="invByType"></div>
+    <div class="actions" style="margin-top:10px"><button class="btn btn-primary" id="invExp">导出 Excel</button></div>
+  </div>
+  <datalist id="invHospList"></datalist>
+  <datalist id="invCustList"></datalist>
+  <datalist id="invTypeList"></datalist>
+</section>
 </main>
 
 <!--pnid:krDsSffEW4R82pBj8Fu7PH--><!-- ================= 底部导航 ================= -->
@@ -2989,7 +3096,7 @@ App.renderHome = function () {
 
 /* ---------- 总备份 / 恢复 ---------- */
 App.BACKUP_KEYS = {
-  flow: ['hospital_flow_records_v1', 'hosp-flow-targets'],
+  flow: ['hospital_flow_records_v1', 'hosp-flow-targets', 'hosp_stock_v1'],
   output: ['cust_output_v1'],
   daily: ['dailyCostBook.v1'],
   energy: ['yuanup_records_v1', 'yuanup_settings_v1', 'yuanup_next_start_v1'],
@@ -2999,6 +3106,7 @@ App.BACKUP_KEYS = {
   period: ['menstrual_records_v1'],
   crm: ['hosp_cust_mgr_v1'],
   meet: ['meet_records_v1'],
+  invest: ['cust_invest_v1'],
 };
 App.getAllLS = function () {
   const out = {};
@@ -3940,17 +4048,135 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ================= 页签 ================= */
   let activeTab = 'entry';
+  /* ================= 进销存（医院流向模块内） ================= */
+  const SK = 'hosp_stock_v1';
+  let stockDB = { moves: [], safe: {} };
+  let stockType = 'in';
+  let stkFlowFilter = 'all';
+  function loadStock() {
+    try { const r = localStorage.getItem(SK); stockDB = r ? JSON.parse(r) : { moves: [], safe: {}, init: {} }; } catch (e) { stockDB = { moves: [], safe: {}, init: {} }; }
+    if (!stockDB || !Array.isArray(stockDB.moves)) stockDB = { moves: [], safe: {}, init: {} };
+    if (!stockDB.safe || typeof stockDB.safe !== 'object') stockDB.safe = {};
+    if (!stockDB.init || typeof stockDB.init !== 'object') stockDB.init = {};
+  }
+  function saveStock() { try { localStorage.setItem(SK, JSON.stringify(stockDB)); } catch (e) { toast('保存失败：本地存储不可用'); } }
+  function stkKey(h, p) { return JSON.stringify([h, p]); }
+  function stkNow() {
+    const m = {};
+    for (const r of stockDB.moves) {
+      const k = stkKey(r.hospital, r.product);
+      m[k] = m[k] || { hosp: r.hospital, prod: r.product, in: 0, out: 0, safe: stockDB.safe[k] || 0, init: stockDB.init[k] || 0 };
+      if (r.type === 'in') m[k].in += r.qty; else m[k].out += r.qty;
+    }
+    for (const k in stockDB.init) {
+      if (!m[k]) { const hp = JSON.parse(k); m[k] = { hosp: hp[0], prod: hp[1], in: 0, out: 0, safe: stockDB.safe[k] || 0, init: stockDB.init[k] || 0 }; }
+      else m[k].init = stockDB.init[k] || 0;
+    }
+    for (const k in m) m[k].now = m[k].init + m[k].in - m[k].out;
+    return m;
+  }
+  function renderStock() {
+    loadStock();
+    const m = stkNow();
+    const keys = Object.keys(m).sort((a, b) => m[b].now - m[a].now);
+    let inS = 0, outS = 0; stockDB.moves.forEach(r => { if (r.type === 'in') inS += r.qty; else outS += r.qty; });
+    const hosps = new Set(stockDB.moves.map(r => r.hospital));
+    const prods = new Set(stockDB.moves.map(r => r.product));
+    $('stkSumHosp').textContent = hosps.size;
+    $('stkSumProd').textContent = prods.size;
+    const totalInit = Object.keys(stockDB.init || {}).reduce((s, k) => s + (Number(stockDB.init[k]) || 0), 0);
+    $('stkSumIn').textContent = fmtQty(inS);
+    $('stkSumOut').textContent = fmtQty(outS);
+    $('stkSumNow').textContent = fmtQty(totalInit + inS - outS);
+    let low = 0;
+    const rows = keys.map(k => {
+      const o = m[k];
+      const isLow = o.safe > 0 && o.now < o.safe;
+      if (isLow) low++;
+      return '<div class="recItem' + (isLow ? ' low' : '') + '">' +
+        '<div class="hospCol"><div class="hosp">' + escapeHtml(o.hosp) + '</div><div class="note">' + escapeHtml(o.prod) + '</div></div>' +
+        '<div class="date">期初 ' + fmtQty(o.init) + ' · 进 ' + fmtQty(o.in) + ' · 销 ' + fmtQty(o.out) + '</div>' +
+        '<div class="qty">' + fmtQty(o.now) + (isLow ? ' ⚠' : '') + '</div>' +
+        '<div class="recBtns">' +
+          '<input class="miniInput" id="init-' + encodeURIComponent(k) + '" value="' + (o.init || '') + '" placeholder="期初"><button data-setinit="' + escapeHtml(k) + '">设</button>' +
+          '<input class="miniInput" id="safe-' + encodeURIComponent(k) + '" value="' + (o.safe || '') + '" placeholder="警戒"><button data-setsafe="' + escapeHtml(k) + '">设</button>' +
+        '</div>' +
+        '</div>';
+    }).join('');
+    $('stkTable').innerHTML = rows || '<div class="emptyTip">还没有进销存记录，去上方录入进货 / 销量吧</div>';
+    $('stkLow').textContent = low;
+    const pl = $('stkProdList'); if (pl) pl.innerHTML = [...prods].map(p => '<option value="' + escapeHtml(p) + '">').join('');
+  }
+  function addStock() {
+    const hosp = $('stkHosp').value.trim();
+    const prod = $('stkProd').value.trim();
+    const qty = parseFloat($('stkQty').value);
+    const date = $('stkDate').value;
+    if (!hosp || !prod || !date || !(qty > 0)) { toast('请完整填写医院、产品、数量和日期'); return; }
+    stockDB.moves.push({ id: uid(), hospital: hosp, product: prod, type: stockType, qty: qty, date: date, note: $('stkNote').value.trim(), created: Date.now() });
+    saveStock();
+    $('stkQty').value = ''; $('stkNote').value = '';
+    renderStock(); toast('已保存 ✓');
+  }
+  function delStock(id) {
+    stockDB.moves = stockDB.moves.filter(r => r.id !== id); saveStock(); renderStock();
+    if (activeTab === 'flow') renderStockFlow();
+  }
+  function weekRange() {
+    const n = new Date(); const d = (n.getDay() + 6) % 7; const mon = new Date(n); mon.setDate(n.getDate() - d);
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 7);
+    return { start: mon.toISOString().slice(0, 10), end: sun.toISOString().slice(0, 10) };
+  }
+  function renderStockFlow() {
+    loadStock();
+    let rows = stockDB.moves.slice();
+    const m = todayStr().slice(0, 7); const wk = weekRange();
+    if (stkFlowFilter === 'in') rows = rows.filter(r => r.type === 'in');
+    else if (stkFlowFilter === 'out') rows = rows.filter(r => r.type === 'out');
+    else if (stkFlowFilter === 'month') rows = rows.filter(r => r.date && r.date.slice(0, 7) === m);
+    else if (stkFlowFilter === 'week') rows = rows.filter(r => r.date && r.date >= wk.start && r.date < wk.end);
+    rows.sort((a, b) => (b.created || 0) - (a.created || 0));
+    const box = $('stkFlowList');
+    if (!rows.length) { box.innerHTML = '<div class="emptyTip">暂无记录</div>'; return; }
+    box.innerHTML = rows.map(r => '<div class="recItem">' +
+      '<div class="hospCol"><div class="hosp">' + escapeHtml(r.hospital) + '</div><div class="note">' + escapeHtml(r.product) + '</div></div>' +
+      '<div class="date">' + (r.type === 'in' ? '进' : '销') + ' ' + r.date + '</div>' +
+      '<div class="qty">' + (r.type === 'in' ? '+' : '-') + fmtQty(r.qty) + '</div>' +
+      '<div class="recBtns"><button class="del" data-delstock="' + r.id + '">删除</button></div>' +
+      '</div>').join('');
+    ['stkFAll', 'stkFIn', 'stkFOut', 'stkFMonth', 'stkFWeek'].forEach(x => { const b = document.getElementById(x); if (b) b.classList.toggle('on', ({ all: 'stkFAll', in: 'stkFIn', out: 'stkFOut', month: 'stkFMonth', week: 'stkFWeek' })[stkFlowFilter] === x); });
+  }
+  async function exportStockExcel() {
+    loadStock();
+    if (!stockDB.moves.length) { toast('暂无数据可导出'); return; }
+    const now = stkNow(); const ks = Object.keys(now);
+    const wb = XLSX.utils.book_new();
+    const inv = [['医院', '产品', '类型', '数量', '日期', '备注']];
+    stockDB.moves.slice().sort((a, b) => a.date < b.date ? -1 : 1).forEach(r => inv.push([r.hospital, r.product, r.type === 'in' ? '进货' : '销量', r.qty, r.date, r.note || '']));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(inv), '进销流水');
+    const cur = [['医院', '产品', '期初库存', '累计进货', '累计销量', '当前库存', '警戒值', '状态']];
+    ks.forEach(k => { const o = now[k]; cur.push([o.hosp, o.prod, o.init || 0, o.in, o.out, o.now, o.safe || '', (o.safe > 0 && o.now < o.safe) ? '偏低' : '正常']); });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(cur), '当前库存');
+    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    await App.deliverFile('进销存-' + todayStr() + '.xlsx', blob);
+  }
+
   function switchTab(name) {
     activeTab = name;
     root.querySelectorAll('.panel').forEach(t => t.classList.remove('on'));
     $('ftab-' + name).classList.add('on');
     if (name === 'agg') { renderAggCards(); renderAggTables(); }
     if (name === 'trend') { renderHospSelect(); renderTrends(); }
+    if (name === 'stock') { renderStock(); }
+    if (name === 'flow') { renderStockFlow(); }
   }
   function refreshAll() {
     renderRecordList(); renderChips(); buildDatalist(); updateMiniStats();
     if (activeTab === 'agg') { renderAggCards(); renderAggTables(); }
     if (activeTab === 'trend') { renderHospSelect(); renderTrends(); }
+    if (activeTab === 'stock') { renderStock(); }
+    if (activeTab === 'flow') { renderStockFlow(); }
     renderTargets();
   }
 
@@ -3963,6 +4189,9 @@ document.addEventListener('DOMContentLoaded', () => {
       { k: 'entry', icon: '✏️', label: '录入' },
       { k: 'agg', icon: '📋', label: '汇总' },
       { k: 'trend', icon: '📈', label: '趋势' }
+    ,
+      { k: 'stock', icon: '📦', label: '进销存' },
+      { k: 'flow', icon: '🧾', label: '流水' }
     ],
     init() {
       loadRecords();
@@ -4007,6 +4236,30 @@ document.addEventListener('DOMContentLoaded', () => {
         tw.addEventListener('click', e => { if (e.target.id === 'tgtReset') { const t = loadTargets(); t.override = {}; saveTargets(t); renderTargets(); } });
       }
       $('selHosp').addEventListener('change', renderTrends);
+      // 进销存事件
+      const seg = $('stockSeg');
+      if (seg) seg.querySelectorAll('.seg').forEach(b => b.addEventListener('click', () => {
+        seg.querySelectorAll('.seg').forEach(x => x.classList.remove('on')); b.classList.add('on'); stockType = b.dataset.type;
+      }));
+      $('stkAdd').addEventListener('click', addStock);
+      $('stkClear').addEventListener('click', () => { $('stkHosp').value = ''; $('stkProd').value = ''; $('stkQty').value = ''; $('stkNote').value = ''; $('stkInit').value = ''; });
+      $('stkSetInit').addEventListener('click', () => {
+        const hosp = $('stkHosp').value.trim(); const prod = $('stkProd').value.trim();
+        const qty = parseFloat($('stkInit').value);
+        if (!hosp || !prod) { toast('请先填写医院和产品'); return; }
+        if (isNaN(qty) || qty < 0) { toast('请输入有效的期初数量'); return; }
+        stockDB.init[stkKey(hosp, prod)] = qty; saveStock(); renderStock(); toast('已设期初库存 ✓');
+      });
+      $('stkTable').addEventListener('click', e => {
+        const sb = e.target.closest('[data-setsafe]'); if (sb) { const k = sb.dataset.setsafe; const inp = document.getElementById('safe-' + encodeURIComponent(k)); stockDB.safe[k] = parseFloat(inp && inp.value) || 0; saveStock(); renderStock(); return; }
+        const ib = e.target.closest('[data-setinit]'); if (ib) { const k = ib.dataset.setinit; const inp = document.getElementById('init-' + encodeURIComponent(k)); stockDB.init[k] = parseFloat(inp && inp.value) || 0; saveStock(); renderStock(); }
+      });
+      $('stkFlowList').addEventListener('click', e => { const b = e.target.closest('[data-delstock]'); if (b) delStock(b.dataset.delstock); });
+      const fmap = { stkFAll: 'all', stkFIn: 'in', stkFOut: 'out', stkFMonth: 'month', stkFWeek: 'week' };
+      const fbtns = ['stkFAll', 'stkFIn', 'stkFOut', 'stkFMonth', 'stkFWeek'];
+      Object.keys(fmap).forEach(id => { const el = $(id); if (el) el.addEventListener('click', () => { stkFlowFilter = fmap[id]; fbtns.forEach(x => { const b = $(x); if (b) b.classList.toggle('on', x === id); }); renderStockFlow(); }); });
+      $('stkExp').addEventListener('click', exportStockExcel);
+      if ($('stkDate') && !$('stkDate').value) $('stkDate').value = todayStr();
       refreshAll();
     },
     onTab(k) { switchTab(k); },
@@ -4014,7 +4267,16 @@ document.addEventListener('DOMContentLoaded', () => {
     homeMeta() {
       loadRecords();
       const agg = buildAgg();
-      return records.length ? ('<b>' + records.length + '</b> 条 · <b>' + Object.keys(agg.hospTotal).length + '</b> 家医院 · 累计 <b>' + fmtQty(agg.grand) + '</b>') : '暂无记录';
+      let meta = records.length ? ('<b>' + records.length + '</b> 条 · <b>' + Object.keys(agg.hospTotal).length + '</b> 家医院 · 累计 <b>' + fmtQty(agg.grand) + '</b>') : '暂无记录';
+      try {
+        loadStock();
+        const sm = stkNow(); const keys = Object.keys(sm);
+        if (keys.length) {
+          let low = 0; keys.forEach(k => { if (sm[k].safe > 0 && sm[k].now < sm[k].safe) low++; });
+          meta += ' · 在库 <b>' + keys.length + '</b> 品种 · 低于警戒 <b>' + low + '</b>';
+        }
+      } catch (e) {}
+      return meta;
     }
   });
 })();
@@ -4132,9 +4394,22 @@ document.addEventListener('DOMContentLoaded', () => {
   function cancelRename() { renameState = null; renderSettings(); }
   function saveRename(type) {
     const v = $('rename-input').value.trim(); if (!v) { toast('名称不能为空'); return; }
-    if (type === 'hospital') { const h = DB.hospitals.find(x => x.id === renameState.id); if (DB.hospitals.some(x => x.name === v && x.id !== h.id)) { toast('医院名已存在'); return; } h.name = v; }
-    else { const c = DB.customers.find(x => x.id === renameState.id); if (DB.customers.some(x => x.name === v && x.id !== c.id)) { toast('客户名已存在'); return; } c.name = v; }
-    renameState = null; save(); renderSettings(); refreshEntry(); toast('已改名 ✓');
+    if (type === 'hospital') { const h = DB.hospitals.find(x => x.id === renameState.id); if (DB.hospitals.some(x => x.name === v && x.id !== h.id)) { toast('医院名已存在'); return; } const old = h.name; h.name = v; syncInvestName('hospital', old, v); }
+    else { const c = DB.customers.find(x => x.id === renameState.id); if (DB.customers.some(x => x.name === v && x.id !== c.id)) { toast('客户名已存在'); return; } const old = c.name; c.name = v; syncInvestName('customer', old, v); }
+    renameState = null; save(); renderSettings(); refreshEntry(); window.dispatchEvent(new Event('output-data-changed')); toast('已改名 ✓');
+  }
+  function syncInvestName(kind, oldName, newName) {
+    try {
+      const raw = localStorage.getItem('cust_invest_v1'); if (!raw) return;
+      const d = JSON.parse(raw); if (!d || !Array.isArray(d.records)) return;
+      let changed = false;
+      d.records.forEach(r => {
+        if (kind === 'hospital' && App.normName(r.hospital) === App.normName(oldName)) { r.hospital = newName; changed = true; }
+        if (kind === 'customer' && App.normName(r.customer) === App.normName(oldName)) { r.customer = newName; changed = true; }
+      });
+      if (changed) localStorage.setItem('cust_invest_v1', JSON.stringify(d));
+      const iv = App.mods.invest; if (iv && typeof iv._dbRefresh === 'function') iv._dbRefresh();
+    } catch (e) {}
   }
   function startMerge(type, id) { mergeState = { type, id }; renameState = null; renderSettings(); }
   function cancelMerge() { mergeState = null; renderSettings(); }
@@ -4142,24 +4417,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const tgt = $('merge-target').value;
     if (!tgt) { toast('请选择合并目标'); return; }
     const src = mergeState.id;
+    let srcName = '', tgtName = '';
     if (type === 'hospital') {
+      const sh = DB.hospitals.find(h => h.id === src); const th = DB.hospitals.find(h => h.id === tgt);
+      srcName = sh ? sh.name : ''; tgtName = th ? th.name : '';
       DB.records.forEach(r => { if (r.hospitalId === src) r.hospitalId = tgt; });
       DB.customers.forEach(c => { if (c.hospitalId === src) c.hospitalId = tgt; });
       DB.hospitals = DB.hospitals.filter(h => h.id !== src);
     } else {
+      const sc = DB.customers.find(c => c.id === src); const tc = DB.customers.find(c => c.id === tgt);
+      srcName = sc ? sc.name : ''; tgtName = tc ? tc.name : '';
       DB.records.forEach(r => { if (r.customerId === src) r.customerId = tgt; });
       DB.customers = DB.customers.filter(c => c.id !== src);
     }
-    mergeState = null; save(); renderSettings(); refreshEntry(); toast('已合并 ✓');
+    if (srcName && tgtName) syncInvestName(type, srcName, tgtName);
+    mergeState = null; save(); renderSettings(); refreshEntry(); window.dispatchEvent(new Event('output-data-changed')); toast('已合并 ✓');
   }
   function delHos(id) {
     const used = DB.records.some(r => r.hospitalId === id) || DB.customers.some(c => c.hospitalId === id);
     if (used && !confirm('该医院已有记录或被客户绑定，删除后相关记录仍保留但显示为"—"。确定删除？')) return;
-    DB.hospitals = DB.hospitals.filter(h => h.id !== id); save(); renderSettings(); toast('已删除');
+    DB.hospitals = DB.hospitals.filter(h => h.id !== id); save(); renderSettings(); window.dispatchEvent(new Event('output-data-changed')); toast('已删除');
   }
   function delCust(id) {
     if (DB.records.some(r => r.customerId === id) && !confirm('该客户已有产出记录，删除后记录仍保留但显示为"—"。确定删除？')) return;
-    DB.customers = DB.customers.filter(c => c.id !== id); save(); renderSettings(); toast('已删除');
+    DB.customers = DB.customers.filter(c => c.id !== id); save(); renderSettings(); window.dispatchEvent(new Event('output-data-changed')); toast('已删除');
   }
 
   /* ============ 汇总通用计算 ============ */
@@ -4447,14 +4728,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const v = $('hos-input').value.trim();
       if (!v) { toast('请输入医院名称'); return; }
       if (DB.hospitals.some(h => h.name === v)) { toast('医院已存在'); return; }
-      DB.hospitals.push({ id: uid(), name: v }); save(); $('hos-input').value = ''; renderSettings(); toast('已添加');
+      DB.hospitals.push({ id: uid(), name: v }); save(); $('hos-input').value = ''; renderSettings(); window.dispatchEvent(new Event('output-data-changed')); toast('已添加');
     };
     $('btn-add-cust').onclick = () => {
       const v = $('cust-input').value.trim();
       const hid = $('cust-hos').value;
       if (!v) { toast('请输入客户姓名'); return; }
       if (DB.customers.some(c => c.name === v && c.hospitalId === hid)) { toast('该客户已存在'); return; }
-      DB.customers.push({ id: uid(), name: v, hospitalId: hid }); save(); $('cust-input').value = ''; renderSettings(); toast('已添加');
+      DB.customers.push({ id: uid(), name: v, hospitalId: hid }); save(); $('cust-input').value = ''; renderSettings(); window.dispatchEvent(new Event('output-data-changed')); toast('已添加');
     };
     $('cust-dim-m').onclick = () => setCustDim('month');
     $('cust-dim-w').onclick = () => setCustDim('week');
@@ -11390,6 +11671,200 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || location.
     rcShowPwaHint();
   });
 }
+</script>
+<script>
+(function () {
+  const root = document.getElementById('view-invest');
+  const $ = id => root.querySelector('#' + id);
+  const KEY = 'cust_invest_v1';
+  function uid() { return 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function todayStr() { const d = new Date(); const p = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); }
+  function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+  function fmtMoney(v) { const n = Math.round((Number(v) || 0) * 100) / 100; return '¥' + n.toLocaleString('zh-CN', { maximumFractionDigits: 2 }); }
+  function toast(t) { try { App.toast(t); } catch (e) {} }
+  function normName(s) { return String(s || '').trim().toLowerCase(); }
+  let DB = load();
+  function load() { try { const r = localStorage.getItem(KEY); if (r) { const d = JSON.parse(r); if (d && Array.isArray(d.records)) return { records: d.records, types: Array.isArray(d.types) ? d.types : [] }; } } catch (e) {} return { records: [], types: [] }; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) { toast('保存失败：本地存储不可用'); } }
+  let activeTab = 'entry';
+  let invFilter = 'all';
+  let invTypeFilter = '';
+  function weekRange() { const n = new Date(); const d = (n.getDay() + 6) % 7; const mon = new Date(n); mon.setDate(n.getDate() - d); const sun = new Date(mon); sun.setDate(mon.getDate() + 7); return { start: mon.toISOString().slice(0, 10), end: sun.toISOString().slice(0, 10) }; }
+
+  function renderDatalists() {
+    let hosps = [], custs = [];
+    try { const o = JSON.parse(localStorage.getItem('cust_output_v1') || '{}'); hosps = (o.hospitals || []).map(h => h.name); custs = (o.customers || []).map(c => c.name); } catch (e) {}
+    const myH = DB.records.map(r => r.hospital).filter(Boolean);
+    const myC = DB.records.map(r => r.customer).filter(Boolean);
+    const hSet = [...new Set([...hosps, ...myH])];
+    const cSet = [...new Set([...custs, ...myC])];
+    const hl = $('invHospList'); if (hl) hl.innerHTML = hSet.map(h => '<option value="' + escapeHtml(h) + '">').join('');
+    const cl = $('invCustList'); if (cl) cl.innerHTML = cSet.map(c => '<option value="' + escapeHtml(c) + '">').join('');
+    const tl = $('invTypeList'); if (tl) tl.innerHTML = DB.types.map(t => '<option value="' + escapeHtml(t) + '">').join('');
+    const ts = $('invTypeSel'); if (ts) ts.innerHTML = '<option value="">全部类型</option>' + DB.types.map(t => '<option value="' + escapeHtml(t) + '">' + escapeHtml(t) + '</option>').join('');
+  }
+  function addInvest() {
+    const hosp = $('invHosp').value.trim();
+    const cust = $('invCust').value.trim();
+    const type = $('invType').value.trim();
+    const amt = parseFloat($('invAmt').value);
+    const date = $('invDate').value;
+    const note = $('invNote').value.trim();
+    if (!hosp && !cust) { toast('请填写医院或客户'); return; }
+    if (!(amt > 0)) { toast('请填写金额'); return; }
+    if (!date) { toast('请选择日期'); return; }
+    DB.records.push({ id: uid(), hospital: hosp, customer: cust, type: type, amount: amt, date: date, note: note, created: Date.now() });
+    if (type && !DB.types.includes(type)) DB.types.push(type);
+    save();
+    $('invAmt').value = ''; $('invNote').value = '';
+    renderDatalists();
+    if (activeTab === 'detail') renderDetail();
+    if (activeTab === 'summary') renderSummary();
+    toast('已保存 ✓');
+  }
+  function copyLast() {
+    const last = DB.records[DB.records.length - 1];
+    if (!last) { toast('还没有记录可复制'); return; }
+    $('invHosp').value = last.hospital || ''; $('invCust').value = last.customer || '';
+    $('invType').value = last.type || ''; $('invAmt').value = last.amount || '';
+    $('invNote').value = last.note || ''; $('invDate').value = todayStr();
+    toast('已填入上一条');
+  }
+  function delInvest(id) {
+    DB.records = DB.records.filter(r => r.id !== id); save();
+    if (activeTab === 'detail') renderDetail();
+    if (activeTab === 'summary') renderSummary();
+    toast('已删除');
+  }
+  function renderDetail() {
+    let rows = DB.records.slice();
+    const wk = weekRange(); const m = todayStr().slice(0, 7);
+    if (invFilter === 'week') rows = rows.filter(r => r.date >= wk.start && r.date < wk.end);
+    else if (invFilter === 'month') rows = rows.filter(r => r.date.slice(0, 7) === m);
+    if (invTypeFilter) rows = rows.filter(r => normName(r.type) === normName(invTypeFilter));
+    rows.sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.created || 0) - (a.created || 0));
+    const box = $('invList');
+    if (!rows.length) { box.innerHTML = '<div class="emptyTip">暂无投入记录</div>'; return; }
+    box.innerHTML = rows.map(r => '<div class="recItem">' +
+      '<div class="hospCol"><div class="hosp">' + escapeHtml(r.hospital || '未填医院') + '</div><div class="note">' + escapeHtml(r.customer || '未填客户') + (r.type ? (' · ' + escapeHtml(r.type)) : '') + '</div></div>' +
+      '<div class="date">' + r.date + '</div>' +
+      '<div class="qty">' + fmtMoney(r.amount) + '</div>' +
+      '<div class="recBtns"><button class="del" data-delinv="' + r.id + '">删除</button></div>' +
+      '</div>').join('');
+  }
+  function renderSummary() {
+    const all = DB.records;
+    const total = all.reduce((s, r) => s + (r.amount || 0), 0);
+    const m = todayStr().slice(0, 7);
+    const mAll = all.filter(r => r.date.slice(0, 7) === m);
+    const mTotal = mAll.reduce((s, r) => s + (r.amount || 0), 0);
+    const wk = weekRange();
+    const wAll = all.filter(r => r.date >= wk.start && r.date < wk.end);
+    const wTotal = wAll.reduce((s, r) => s + (r.amount || 0), 0);
+    $('invSumCount').textContent = all.length;
+    $('invSumTotal').textContent = fmtMoney(total);
+    $('invSumMonth').textContent = fmtMoney(mTotal);
+    $('invSumWeek').textContent = fmtMoney(wTotal);
+    const agg = (keyFn) => { const m2 = {}; all.forEach(r => { const k = keyFn(r) || '未填'; m2[k] = m2[k] || { n: 0, a: 0 }; m2[k].n++; m2[k].a += (r.amount || 0); }); return m2; };
+    const byHosp = agg(r => r.hospital); const byCust = agg(r => r.customer); const byType = agg(r => r.type || '未分类');
+    const tbl = (title, obj) => {
+      const ks = Object.keys(obj).sort((a, b) => obj[b].a - obj[a].a);
+      if (!ks.length) return '<div class="emptyTip">暂无数据</div>';
+      return '<table class="tbl"><tr><th>' + title + '</th><th>笔数</th><th>金额</th></tr>' +
+        ks.map(k => '<tr><td>' + escapeHtml(k) + '</td><td>' + obj[k].n + '</td><td>' + fmtMoney(obj[k].a) + '</td></tr>').join('') + '</table>';
+    };
+    $('invByHosp').innerHTML = tbl('医院', byHosp);
+    $('invByCust').innerHTML = tbl('客户', byCust);
+    $('invByType').innerHTML = tbl('类型', byType);
+  }
+  async function exportInvestExcel() {
+    if (!DB.records.length) { toast('暂无数据可导出'); return; }
+    const wb = XLSX.utils.book_new();
+    const det = [['医院', '客户', '类型', '金额', '日期', '备注']];
+    DB.records.slice().sort((a, b) => a.date < b.date ? -1 : 1).forEach(r => det.push([r.hospital, r.customer, r.type, r.amount, r.date, r.note || '']));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(det), '投入明细');
+    const sumSheet = (name, obj) => { const ks = Object.keys(obj); const rows = [['类别', '笔数', '金额']]; ks.forEach(k => rows.push([k, obj[k].n, obj[k].a])); return rows; };
+    const agg = (keyFn) => { const m = {}; DB.records.forEach(r => { const k = keyFn(r) || '未填'; m[k] = m[k] || { n: 0, a: 0 }; m[k].n++; m[k].a += (r.amount || 0); }); return m; };
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sumSheet('医院', agg(r => r.hospital))), '按医院');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sumSheet('客户', agg(r => r.customer))), '按客户');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sumSheet('类型', agg(r => r.type || '未分类'))), '按类型');
+    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    await App.deliverFile('资源投入-' + todayStr() + '.xlsx', blob);
+  }
+  /* 客户产出「投入N」徽标：包装 output 的 onTab/onShow，在设置页渲染后挂徽标 */
+  function decorateInvestBadges() {
+    try {
+      const inv = DB.records;
+      const hl = document.getElementById('hos-list');
+      if (hl) hl.querySelectorAll('.list-item').forEach(it => {
+        const nm = it.querySelector('.name'); if (!nm || it.querySelector('.invBadge')) return;
+        const name = (nm.childNodes[0] ? nm.childNodes[0].textContent : nm.textContent).trim();
+        const n = inv.filter(r => App.normName(r.hospital) === App.normName(name)).length;
+        if (n > 0) { const b = document.createElement('span'); b.className = 'invBadge'; b.textContent = '💰投入 ' + n; nm.appendChild(b); }
+      });
+      const cl = document.getElementById('cust-list');
+      if (cl) cl.querySelectorAll('.list-item').forEach(it => {
+        const nm = it.querySelector('.name'); if (!nm || it.querySelector('.invBadge')) return;
+        const name = (nm.childNodes[0] ? nm.childNodes[0].textContent : nm.textContent).trim();
+        const n = inv.filter(r => App.normName(r.customer) === App.normName(name)).length;
+        if (n > 0) { const b = document.createElement('span'); b.className = 'invBadge'; b.textContent = '💰投入 ' + n; nm.appendChild(b); }
+      });
+    } catch (e) {}
+  }
+  function switchView(v) {
+    activeTab = v;
+    root.querySelectorAll('.panel').forEach(x => x.classList.remove('on'));
+    $('iview-' + v).classList.add('on');
+    if (v === 'detail') renderDetail();
+    if (v === 'summary') renderSummary();
+  }
+  App.register('invest', {
+    name: '资源投入', icon: '💰', color: '#b8860b', soft: 'var(--blue-soft)',
+    desc: '记录各医院/客户的资源投入，类型记忆，按周/月筛选与汇总',
+    hTip: '资源投入 · 本机保存',
+    tabs: [
+      { k: 'entry', icon: '✏️', label: '录入' },
+      { k: 'detail', icon: '📋', label: '明细' },
+      { k: 'summary', icon: '📊', label: '汇总' }
+    ],
+    init() {
+      $('invAdd').addEventListener('click', addInvest);
+      $('invCopy').addEventListener('click', copyLast);
+      $('invClear').addEventListener('click', () => { $('invHosp').value = ''; $('invCust').value = ''; $('invType').value = ''; $('invAmt').value = ''; $('invNote').value = ''; });
+      $('invList').addEventListener('click', e => { const b = e.target.closest('[data-delinv]'); if (b) delInvest(b.dataset.delinv); });
+      const fmap = { invFAll: 'all', invFWeek: 'week', invFMonth: 'month' };
+      Object.keys(fmap).forEach(id => { const el = $(id); if (el) el.addEventListener('click', () => { invFilter = fmap[id]; ['invFAll', 'invFWeek', 'invFMonth'].forEach(x => { const b = $(x); if (b) b.classList.toggle('on', x === id); }); renderDetail(); }); });
+      $('invTypeSel').addEventListener('change', () => { invTypeFilter = $('invTypeSel').value; renderDetail(); });
+      $('invExp').addEventListener('click', exportInvestExcel);
+      if ($('invDate') && !$('invDate').value) $('invDate').value = todayStr();
+      renderDatalists();
+      switchView('entry');
+    },
+    onTab(k) { switchView(k); },
+    onShow() { renderDatalists(); if (activeTab === 'detail') renderDetail(); if (activeTab === 'summary') renderSummary(); },
+    homeMeta() {
+      const all = DB.records;
+      if (!all.length) return '暂无投入';
+      const m = todayStr().slice(0, 7);
+      const mt = all.filter(r => r.date.slice(0, 7) === m).reduce((s, r) => s + (r.amount || 0), 0);
+      return '<b>' + all.length + '</b> 笔 · 本月 <b>' + fmtMoney(mt) + '</b>';
+    }
+  });
+  try {
+    const outMod = App.mods.output;
+    if (outMod) {
+      const _ot = outMod.onTab; outMod.onTab = function (k) { const r = _ot.apply(this, arguments); if (k === 'settings') setTimeout(decorateInvestBadges, 0); return r; };
+      const _os = outMod.onShow; outMod.onShow = function () { const r = _os.apply(this, arguments); setTimeout(decorateInvestBadges, 0); return r; };
+    }
+    const invMod = App.mods.invest;
+    if (invMod) {
+      invMod._dbRefresh = function () { try { DB = load(); renderDatalists(); } catch (e) {} };
+      window.addEventListener('output-data-changed', function () { try { renderDatalists(); } catch (e) {} });
+    }
+  } catch (e) {}
+})();
+
 </script>
 </body>
 </html>
