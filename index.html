@@ -1478,11 +1478,6 @@ details.fold .fbody{padding:0 16px 16px}
 <main data-page-node-id="xtaVTXRJaierEeMPZ1aShv">
 <!-- ================= 首页（改造） ================= -->
 <section class="view on" id="view-home">
-  <div class="home-hero">
-    <h1>📋 记录中心</h1>
-    <p><span class="rcCount">11</span> 个工具 · 一本通 · 数据全部只存在这台设备的浏览器里</p>
-    <div class="hpill">📅 <span id="homeToday"></span> · <span id="homeBackupTip">尚未备份</span></div>
-  </div>
 
   <div class="card lz-quick">
     <h3>💰 记账本 <span class="tag" id="homeLzRange">本月</span></h3>
@@ -1556,6 +1551,11 @@ details.fold .fbody{padding:0 16px 16px}
 </section>
 <!-- ================= 我的（新增） ================= -->
 <section class="view" id="view-me">
+  <div class="home-hero me-hero">
+    <h1>📋 记录中心</h1>
+    <p><span class="rcCount">11</span> 个工具 · 一本通 · 数据全部只存在这台设备的浏览器里</p>
+    <div class="hpill">📅 <span id="homeToday"></span> · <span id="homeBackupTip">尚未备份</span></div>
+  </div>
   <div class="card">
     <h3>📱 存储位置</h3>
     <p class="muted" id="meStore" style="line-height:1.8"></p>
@@ -10337,7 +10337,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   App.renderHome = function () {
     const t = new Date();
-    App.$('homeToday').textContent = t.getFullYear() + '年' + (t.getMonth() + 1) + '月' + t.getDate() + '日';
+    const homeTodayEl = App.$('homeToday');
+    if (homeTodayEl) homeTodayEl.textContent = t.getFullYear() + '年' + (t.getMonth() + 1) + '月' + t.getDate() + '日';
 
     /* 记账速览 */
     let mt = { exp: 0, inc: 0, today: 0, n: 0 };
@@ -10445,6 +10446,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ---------- 我的 ---------- */
   App.renderMe = function () {
+    const t = new Date();
+    const meTodayEl = App.$('homeToday');
+    if (meTodayEl) meTodayEl.textContent = t.getFullYear() + '年' + (t.getMonth() + 1) + '月' + t.getDate() + '日';
+    App.syncToolCount();
     let ok = true;
     try { localStorage.setItem('__t__' + Date.now(), '1'); } catch (e) { ok = false; }
     const where = location.protocol === 'file:' ? '本机文件（完全离线）' : location.host;
