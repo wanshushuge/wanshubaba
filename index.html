@@ -1819,18 +1819,19 @@ details.fold .fbody{padding:0 16px 16px}
       </div>
       <input id="stkNote" placeholder="备注（选填）" style="margin-top:8px;width:100%">
       <div class="ov-init-row" style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <span class="muted">期初库存（按上方医院，设为截止日前的库存）</span>
+        <span class="muted">期初库存（那个时点的库存数，如今年1月1日）</span>
         <input id="stkInit" type="number" min="0" step="any" placeholder="如 100" style="width:120px">
-        <input id="stkInitDate" type="date" title="期初截止日：该日之后的进货流向自动同步进库存" style="width:150px">
+        <input id="stkInitDate" type="date" title="期初时点：该日之前的流向已含在期初里，该日及之后的进货流向自动同步进库存" style="width:150px">
         <button class="btn-ghost btn btn-sm" id="stkSetInit">设期初</button>
       </div>
       <div class="ov-init-row" style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <span class="muted">盘点实际库存（填实盘数量，自动反推用量 / 盘盈）</span>
-        <input id="stkCount" type="number" min="0" step="any" placeholder="如 95" style="width:120px">
+        <span class="muted">盘点实际库存（现在实盘多少填多少，系统自动算出这段时间的用量）</span>
+        <input id="stkCount" type="number" min="0" step="any" placeholder="实盘数量" style="width:120px">
         <button class="btn-ghost btn btn-sm" id="stkDoCount">盘点</button>
       </div>
       <div class="actions" style="margin-top:10px">
         <button class="btn btn-primary" id="stkAdd">保存记录</button>
+        <button class="btn-ghost btn hidden" id="stkCancelEdit">取消编辑</button>
         <button class="btn-ghost btn" id="stkClear">清空</button>
       </div>
     </div>
@@ -1842,10 +1843,15 @@ details.fold .fbody{padding:0 16px 16px}
       <div class="stat"><div class="v" id="stkSumNow">0</div><div class="k">当前总库存</div></div>
       <div class="stat"><div class="v" id="stkLow">0</div><div class="k">偏低预警</div></div>
     </div>
-    <div class="sectionTitle">库存总表<small>实时计算：当前库存 = 期初 + 进货(流向同步+手工) − 用量(销量+盘点)。改「盘点库存」自动算用量；改销量自动减库存；流向记录一变库存跟着变。选月份可看该月「月初 / 本月进货 / 本月用量 / 月末」</small></div>
+    <div class="sectionTitle">库存总表<small>算法：当前库存 = 期初(某时点库存) + 该时点之后的进货(流向自动同步+手工) − 用量(销量+盘点反推)。例：1月1日期初 100 → 之后流向进货 50 → 今天实盘 80 → 自动算出用量 70。手工录的记录可在「流水」页<b>编辑 / 删除</b>（流向同步的记录只能删原流向）。选月份可看该月「月初 / 本月进货 / 本月用量 / 月末」</small></div>
     <div class="ov-init-row" style="margin:0 0 8px">
       <input id="stkSearch" placeholder="搜医院名" autocomplete="off" style="flex:1;min-width:110px" type="text">
       <select id="stkMonth" style="width:140px"></select>
+    </div>
+    <div class="ov-init-row" style="margin:0 0 8px">
+      <span class="muted">期初时点（该日之前的流向已含在期初，该日及之后自动同步）</span>
+      <input id="stkBatchDate" type="date" style="width:150px">
+      <button class="btn-ghost btn btn-sm" id="stkBatchInitDate">应用到所有医院</button>
     </div>
     <div id="stkTable"></div>
   </div>
@@ -1860,6 +1866,7 @@ details.fold .fbody{padding:0 16px 16px}
       <button class="miniBtn" id="stkFWeek">本周</button>
       <button class="miniBtn" id="stkExp">导出 Excel</button>
     </div>
+    <div class="muted" style="padding:2px 0 6px;font-size:12px">🔒 标记为「流向同步」的是从医院流向自动带过来的，只读；要更正请到「医院流向 → 录入」改原始记录。手工录入和盘点记录可编辑 / 删除。</div>
     <div id="stkFlowList"></div>
   </div>
 
@@ -4104,7 +4111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     for (const h in stockDB.init) bump(h).init = stockDB.init[h] || 0;
     for (const f of flow) {
       const cut = stockDB.initDate[f.hospital];
-      if (cut && f.date <= cut) continue;
+      if (cut && f.date < cut) continue;
       const o = bump(f.hospital); const q = Number(f.quantity) || 0;
       if (inM(f.date)) o.flowIn += q;
       else if (beforeM(f.date)) o.base += q;
@@ -4118,6 +4125,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     return m;
   }
+  /* 期初时点默认值：今年 1 月 1 日（绝不能默认今天，否则会把今天之前的流向全部切掉） */
+  function defaultInitDate() { return String(new Date().getFullYear()) + '-01-01'; }
   let stkKeyword = '';
   let stkMonth = '';
   /* 月份下拉：来自手工记录、流向记录、期初截止日，再加当前月；倒序排列 */
@@ -4134,6 +4143,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function renderStock() {
     loadStock();
+    if ($('stkInitDate') && !$('stkInitDate').value) $('stkInitDate').value = defaultInitDate();
+    if ($('stkBatchDate') && !$('stkBatchDate').value) $('stkBatchDate').value = defaultInitDate();
     const month = stkMonth || '';
     const m = stkNow(month);
     renderStockMonthOptions(month);
@@ -4158,7 +4169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         : '期初 ' + fmtQty(o.init) + ' · 进货(含流向) ' + fmtQty(o.flowIn + o.in) + ' · 用量 ' + fmtQty(o.out);
       return '<div class="recItem' + (isLow ? ' low' : '') + '">' +
         '<div class="hospCol"><div class="hosp">' + escapeHtml(o.hosp) + '</div><div class="note">' +
-          (idt ? '期初截止 ' + escapeHtml(idt) : '未设期初') +
+          (idt ? '期初时点 ' + escapeHtml(idt) + '，该日起流向自动同步' : '未设期初，建议设今年1月1日') +
           (o.flowIn ? ' · 流向+' + fmtQty(o.flowIn) : '') + '</div></div>' +
         '<div class="date">' + detail + '</div>' +
         '<div class="qty">' + fmtQty(o.now) + (isLow ? ' ⚠' : '') + '</div>' +
@@ -4166,7 +4177,7 @@ document.addEventListener('DOMContentLoaded', () => {
           '<input class="miniInput" id="init-' + encodeURIComponent(h) + '" value="' + (o.init || '') + '" placeholder="期初"><button data-setinit="' + escapeHtml(h) + '">设期初</button>' +
           '<input class="miniInput" id="idate-' + encodeURIComponent(h) + '" value="' + (idt || '') + '" placeholder="截止日" type="date"><button data-setidate="' + escapeHtml(h) + '">设截止</button>' +
           '<input class="miniInput" id="safe-' + encodeURIComponent(h) + '" value="' + (o.safe || '') + '" placeholder="警戒"><button data-setsafe="' + escapeHtml(h) + '">设</button>' +
-          (month ? '' : '<input class="miniInput" id="count-' + encodeURIComponent(h) + '" value="' + (o.now || '') + '" placeholder="盘点库存" title="改这里点盘点，自动反推用量"><button data-countset="' + escapeHtml(h) + '" title="按实盘库存自动计算用量">盘点</button>') +
+          (month ? '' : '<input class="miniInput" id="count-' + encodeURIComponent(h) + '" value="" placeholder="实盘数量" title="填现在实际盘到的数量，点盘点自动反推这段时间的用量"><button data-countset="' + escapeHtml(h) + '" title="按实盘库存自动计算用量">盘点</button>') +
         '</div>' +
         '</div>';
     }).join('');
@@ -4178,19 +4189,58 @@ document.addEventListener('DOMContentLoaded', () => {
     const qty = parseFloat($('stkQty').value);
     const date = $('stkDate').value;
     if (!hosp || !date || !(qty > 0)) { toast('请完整填写医院、数量和日期'); return; }
+    if (stkEditId) {
+      const r = stockDB.moves.filter(x => x.id === stkEditId)[0];
+      if (!r) { stkEditId = null; syncStockEditUI(); toast('原记录已被删除'); return; }
+      r.hospital = hosp; r.type = stockType; r.qty = qty; r.date = date; r.note = $('stkNote').value.trim();
+      saveStock(); stkEditId = null; syncStockEditUI();
+      $('stkHosp').value = ''; $('stkQty').value = ''; $('stkNote').value = '';
+      renderStock(); if (activeTab === 'flow') renderStockFlow();
+      toast('已保存修改 ✓'); return;
+    }
     stockDB.moves.push({ id: uid(), hospital: hosp, type: stockType, qty: qty, date: date, note: $('stkNote').value.trim(), created: Date.now() });
     saveStock();
     $('stkQty').value = ''; $('stkNote').value = '';
     renderStock(); toast('已保存 ✓');
   }
+  let stkEditId = null;
+  function syncStockEditUI() {
+    const a = $('stkAdd'); if (a) a.textContent = stkEditId ? '保存修改' : '保存记录';
+    const c = $('stkCancelEdit'); if (c) c.classList.toggle('hidden', !stkEditId);
+  }
+  function startEditStock(id) {
+    loadStock();
+    const r = stockDB.moves.filter(x => x.id === id)[0];
+    if (!r) { toast('流向同步的数据不能修改，请到「医院流向 → 录入」修改原始流向'); return; }
+    stkEditId = id;
+    $('stkHosp').value = r.hospital || '';
+    $('stkQty').value = r.qty || '';
+    $('stkDate').value = r.date || todayStr();
+    $('stkNote').value = r.note || '';
+    stockType = (r.type === 'out') ? 'out' : 'in';
+    document.querySelectorAll('#stockSeg .seg').forEach(b => b.classList.toggle('on', b.dataset.type === stockType));
+    syncStockEditUI();
+    if (typeof switchTab === 'function') switchTab('stock');
+    toast('正在修改「' + (r.hospital || '') + ' ' + (r.type === 'in' ? '进货' : '用量') + ' ' + fmtQty(r.qty) + '」，改完点「保存修改」');
+  }
+  function cancelEditStock() {
+    stkEditId = null; syncStockEditUI();
+    $('stkHosp').value = ''; $('stkQty').value = ''; $('stkNote').value = ''; $('stkDate').value = todayStr();
+    if ($('stkInit')) $('stkInit').value = '';
+    if ($('stkCount')) $('stkCount').value = '';
+    toast('已取消编辑');
+  }
   function delStock(id) {
+    loadStock();
+    if (!stockDB.moves.some(r => r.id === id)) { toast('流向同步的数据不能删除，请到「医院流向 → 录入」修改原始流向'); return; }
     stockDB.moves = stockDB.moves.filter(r => r.id !== id); saveStock(); renderStock();
+    if (stkEditId === id) cancelEditStock();
     if (activeTab === 'flow') renderStockFlow();
   }
   function doStockCount(hosp, qty, date) {
     hosp = (hosp || '').toString().trim(); qty = parseFloat(qty);
     if (!hosp) { toast('请先填写医院'); return false; }
-    if (isNaN(qty) || qty < 0) { toast('请输入有效的盘点库存'); return false; }
+    if (isNaN(qty) || qty < 0) { toast('请填写实际盘点到的库存数量'); return false; }
     date = date || todayStr();
     loadStock();
     stockDB.moves = stockDB.moves.filter(r => !(r.hospital === hosp && r.kind === 'count'));
@@ -4213,7 +4263,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let rows = stockDB.moves.slice().map(r => ({ hospital: r.hospital, type: r.type, qty: r.qty, date: r.date, note: r.note || '', src: '手工', id: r.id, kind: r.kind }));
     for (const f of flow) {
       const cut = stockDB.initDate[f.hospital];
-      if (cut && f.date <= cut) continue;
+      if (cut && f.date < cut) continue;
       rows.push({ hospital: f.hospital, type: 'in', qty: f.quantity, date: f.date, note: (f.note || '') + '（流向同步）', src: 'flow', id: null });
     }
     const m = todayStr().slice(0, 7); const wk = weekRange();
@@ -4228,7 +4278,7 @@ document.addEventListener('DOMContentLoaded', () => {
       '<div class="hospCol"><div class="hosp">' + escapeHtml(r.hospital) + '</div><div class="note">' + (r.kind === 'count' ? '📋 ' : '') + escapeHtml(r.note) + '</div></div>' +
       '<div class="date">' + (r.type === 'in' ? '进' : '销') + ' ' + (r.src === 'flow' ? '🔄' : '') + ' ' + r.date + '</div>' +
       '<div class="qty">' + (r.type === 'in' ? '+' : '-') + fmtQty(r.qty) + '</div>' +
-      '<div class="recBtns">' + (r.id ? '<button class="del" data-delstock="' + r.id + '">删除</button>' : '<span class="muted">同步</span>') + '</div>' +
+      '<div class="recBtns">' + (r.id ? '<button data-editstock="' + r.id + '" title="修改这条记录">编辑</button><button class="del" data-delstock="' + r.id + '">删除</button>' : '<span class="muted" title="流向同步数据为只读，不能修改/删除；如需更正请到「医院流向 → 录入」改原始流向">🔒 流向同步</span>') + '</div>' +
       '</div>').join('');
     ['stkFAll', 'stkFIn', 'stkFOut', 'stkFMonth', 'stkFWeek'].forEach(x => { const b = document.getElementById(x); if (b) b.classList.toggle('on', ({ all: 'stkFAll', in: 'stkFIn', out: 'stkFOut', month: 'stkFMonth', week: 'stkFWeek' })[stkFlowFilter] === x); });
   }
@@ -4240,9 +4290,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const wb = XLSX.utils.book_new();
     const inv = [['医院', '类型', '数量', '日期', '来源', '备注']];
     stockDB.moves.slice().sort((a, b) => a.date < b.date ? -1 : 1).forEach(r => inv.push([r.hospital, r.type === 'in' ? '进货' : '销量', r.qty, r.date, '手工', r.note || '']));
-    for (const f of flow) { const cut = stockDB.initDate[f.hospital]; if (cut && f.date <= cut) continue; inv.push([f.hospital, '进货', f.quantity, f.date, '流向同步', (f.note || '') + '（流向同步）']); }
+    for (const f of flow) { const cut = stockDB.initDate[f.hospital]; if (cut && f.date < cut) continue; inv.push([f.hospital, '进货', f.quantity, f.date, '流向同步', (f.note || '') + '（流向同步）']); }
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(inv), '进销流水');
-    const cur = [['医院', '期初库存', '期初截止日', '进货(流向+手工)', '用量(销量+盘点)', '当前库存', '警戒值', '状态']];
+    const cur = [['医院', '期初库存', '期初时点', '进货(流向+手工)', '用量(销量+盘点)', '当前库存', '警戒值', '状态']];
     ks.forEach(h => { const o = now[h]; cur.push([o.hosp, o.init || 0, stockDB.initDate[h] || '', (o.flowIn + o.in), o.out, o.now, o.safe || '', (o.safe > 0 && o.now < o.safe) ? '偏低' : '正常']); });
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(cur), '当前库存');
     const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
@@ -4333,22 +4383,39 @@ document.addEventListener('DOMContentLoaded', () => {
       $('stkDoCount').addEventListener('click', () => { doStockCount($('stkHosp').value.trim(), $('stkCount').value, todayStr()); });
       if ($('stkSearch')) $('stkSearch').addEventListener('input', () => { stkKeyword = $('stkSearch').value || ''; renderStock(); });
       if ($('stkMonth')) $('stkMonth').addEventListener('change', () => { stkMonth = $('stkMonth').value || ''; renderStock(); });
-      $('stkClear').addEventListener('click', () => { $('stkHosp').value = ''; $('stkQty').value = ''; $('stkNote').value = ''; $('stkInit').value = ''; if ($('stkInitDate')) $('stkInitDate').value = ''; if ($('stkCount')) $('stkCount').value = ''; });
+      if ($('stkBatchInitDate')) $('stkBatchInitDate').addEventListener('click', () => {
+        const dt = ($('stkBatchDate') && $('stkBatchDate').value) || defaultInitDate();
+        loadStock();
+        const hs = new Set();
+        stockDB.moves.forEach(r => { if (r.hospital) hs.add(r.hospital); });
+        Object.keys(stockDB.init || {}).forEach(h => hs.add(h));
+        Object.keys(stockDB.safe || {}).forEach(h => hs.add(h));
+        _stkFlowRecords().forEach(f => { if (f.hospital) hs.add(f.hospital); });
+        if (!hs.size) { toast('还没有任何医院记录'); return; }
+        hs.forEach(h => { stockDB.initDate[h] = dt; });
+        saveStock(); renderStock(); toast('已把期初时点 ' + dt + ' 应用到 ' + hs.size + ' 家医院 ✓');
+      });
+      $('stkClear').addEventListener('click', () => { if (stkEditId) { cancelEditStock(); return; } $('stkHosp').value = ''; $('stkQty').value = ''; $('stkNote').value = ''; $('stkInit').value = ''; if ($('stkInitDate')) $('stkInitDate').value = ''; if ($('stkCount')) $('stkCount').value = ''; });
       $('stkSetInit').addEventListener('click', () => {
         const hosp = $('stkHosp').value.trim();
         const qty = parseFloat($('stkInit').value);
         if (!hosp) { toast('请先填写医院'); return; }
         if (isNaN(qty) || qty < 0) { toast('请输入有效的期初数量'); return; }
-        const dt = ($('stkInitDate') && $('stkInitDate').value) || todayStr();
-        stockDB.init[hosp] = qty; stockDB.initDate[hosp] = dt; saveStock(); renderStock(); toast('已设期初库存（截止 ' + dt + '）✓');
+        const dt = ($('stkInitDate') && $('stkInitDate').value) || defaultInitDate();
+        stockDB.init[hosp] = qty; stockDB.initDate[hosp] = dt; saveStock(); renderStock(); toast('已设期初：' + dt + ' 时点库存 ' + fmtQty(qty) + '，该日起进货流向自动同步 ✓');
       });
       $('stkTable').addEventListener('click', e => {
         const sb = e.target.closest('[data-setsafe]'); if (sb) { const h = sb.dataset.setsafe; const inp = document.getElementById('safe-' + encodeURIComponent(h)); stockDB.safe[h] = parseFloat(inp && inp.value) || 0; saveStock(); renderStock(); return; }
         const cb = e.target.closest('[data-countset]'); if (cb) { const h = cb.dataset.countset; const inp = document.getElementById('count-' + encodeURIComponent(h)); doStockCount(h, inp && inp.value, todayStr()); return; }
-        const ib = e.target.closest('[data-setinit]'); if (ib) { const h = ib.dataset.setinit; const inp = document.getElementById('init-' + encodeURIComponent(h)); stockDB.init[h] = parseFloat(inp && inp.value) || 0; if (!stockDB.initDate[h]) stockDB.initDate[h] = todayStr(); saveStock(); renderStock(); return; }
-        const db = e.target.closest('[data-setidate]'); if (db) { const h = db.dataset.setidate; const inp = document.getElementById('idate-' + encodeURIComponent(h)); stockDB.initDate[h] = (inp && inp.value) ? inp.value : todayStr(); saveStock(); renderStock(); }
+        const ib = e.target.closest('[data-setinit]'); if (ib) { const h = ib.dataset.setinit; const inp = document.getElementById('init-' + encodeURIComponent(h)); const dip = document.getElementById('idate-' + encodeURIComponent(h)); stockDB.init[h] = parseFloat(inp && inp.value) || 0; if (dip && dip.value) stockDB.initDate[h] = dip.value; else if (!stockDB.initDate[h]) stockDB.initDate[h] = defaultInitDate(); saveStock(); renderStock(); return; }
+        const db = e.target.closest('[data-setidate]'); if (db) { const h = db.dataset.setidate; const inp = document.getElementById('idate-' + encodeURIComponent(h)); stockDB.initDate[h] = (inp && inp.value) ? inp.value : defaultInitDate(); saveStock(); renderStock(); }
       });
-      $('stkFlowList').addEventListener('click', e => { const b = e.target.closest('[data-delstock]'); if (b) delStock(b.dataset.delstock); });
+      $('stkFlowList').addEventListener('click', e => {
+        const eb = e.target.closest('[data-editstock]'); if (eb) { startEditStock(eb.dataset.editstock); return; }
+        const b = e.target.closest('[data-delstock]'); if (b) delStock(b.dataset.delstock);
+      });
+      if ($('stkCancelEdit')) $('stkCancelEdit').addEventListener('click', cancelEditStock);
+      syncStockEditUI();
       const fmap = { stkFAll: 'all', stkFIn: 'in', stkFOut: 'out', stkFMonth: 'month', stkFWeek: 'week' };
       const fbtns = ['stkFAll', 'stkFIn', 'stkFOut', 'stkFMonth', 'stkFWeek'];
       Object.keys(fmap).forEach(id => { const el = $(id); if (el) el.addEventListener('click', () => { stkFlowFilter = fmap[id]; fbtns.forEach(x => { const b = $(x); if (b) b.classList.toggle('on', x === id); }); renderStockFlow(); }); });
