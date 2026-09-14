@@ -280,6 +280,19 @@ html.rc-dark .tag,html.rc-dark .badge{background:#26303d!important;color:var(--t
 .recItem .qty{font-size:15px;font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums;white-space:nowrap}
 .recItem button{border:none;background:var(--blue-soft);color:var(--blue);border-radius:6px;padding:8px 11px;font-size:12px;flex:0 0 auto;font-weight:600}
 .recItem button.del{background:var(--red-soft);color:var(--red)}
+#stkTable .recItem.stkCard{display:block;align-items:stretch;padding:14px;margin:0 12px 8px}
+#stkTable .recItem.stkCard.low{border-color:#f0a3a3;background:#fff8f8}
+#stkTable .stkTop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+#stkTable .recItem.stkCard .hospCol{flex:1;min-width:0}
+#stkTable .recItem.stkCard .hosp{font-size:15px;min-width:0}
+#stkTable .recItem.stkCard .note{font-size:11px;white-space:normal;line-height:1.4;margin-top:2px}
+#stkTable .recItem.stkCard .qty{font-size:26px;font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right;flex:0 0 auto;line-height:1.1}
+#stkTable .recItem.stkCard.low .qty{color:var(--red)}
+#stkTable .recItem.stkCard .date{font-size:12.5px;color:var(--sub);margin-bottom:10px;white-space:normal;line-height:1.5}
+#stkTable .recItem.stkCard .recBtns{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+#stkTable .stkOp{display:flex;gap:4px}
+#stkTable .stkOp .miniInput{flex:1;min-width:0;width:auto}
+#stkTable .stkOp button{padding:8px 6px;font-size:12px;font-weight:600}
 .exportBtn{margin:0 12px 10px;height:44px;width:calc(100% - 24px);background:var(--green);color:#fff;border:none;border-radius:22px;font-size:15px;font-weight:700}
 .exportBtn:active{filter:brightness(.93)}
 .dataBtns{display:flex;gap:8px;margin:0 12px 8px}
@@ -4167,17 +4180,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const detail = month
         ? '月初 ' + fmtQty(o.base) + ' · 本月进货 ' + fmtQty(o.flowIn + o.in) + ' · 本月用量 ' + fmtQty(o.out)
         : '期初 ' + fmtQty(o.init) + ' · 进货(含流向) ' + fmtQty(o.flowIn + o.in) + ' · 用量 ' + fmtQty(o.out);
-      return '<div class="recItem' + (isLow ? ' low' : '') + '">' +
-        '<div class="hospCol"><div class="hosp">' + escapeHtml(o.hosp) + '</div><div class="note">' +
-          (idt ? '期初时点 ' + escapeHtml(idt) + '，该日起流向自动同步' : '未设期初，建议设今年1月1日') +
-          (o.flowIn ? ' · 流向+' + fmtQty(o.flowIn) : '') + '</div></div>' +
+            return '<div class="recItem stkCard' + (isLow ? ' low' : '') + '">' +
+        '<div class="stkTop">' +
+          '<div class="hospCol"><div class="hosp">' + escapeHtml(o.hosp) + '</div><div class="note">' +
+            (idt ? '期初时点 ' + escapeHtml(idt) + '，该日起流向自动同步' : '未设期初，建议设今年1月1日') +
+            (o.flowIn ? ' · 流向+' + fmtQty(o.flowIn) : '') + '</div></div>' +
+          '<div class="qty">' + fmtQty(o.now) + (isLow ? ' ⚠' : '') + '</div>' +
+        '</div>' +
         '<div class="date">' + detail + '</div>' +
-        '<div class="qty">' + fmtQty(o.now) + (isLow ? ' ⚠' : '') + '</div>' +
         '<div class="recBtns">' +
-          '<input class="miniInput" id="init-' + encodeURIComponent(h) + '" value="' + (o.init || '') + '" placeholder="期初"><button data-setinit="' + escapeHtml(h) + '">设期初</button>' +
-          '<input class="miniInput" id="idate-' + encodeURIComponent(h) + '" value="' + (idt || '') + '" placeholder="截止日" type="date"><button data-setidate="' + escapeHtml(h) + '">设截止</button>' +
-          '<input class="miniInput" id="safe-' + encodeURIComponent(h) + '" value="' + (o.safe || '') + '" placeholder="警戒"><button data-setsafe="' + escapeHtml(h) + '">设</button>' +
-          (month ? '' : '<input class="miniInput" id="count-' + encodeURIComponent(h) + '" value="" placeholder="实盘数量" title="填现在实际盘到的数量，点盘点自动反推这段时间的用量"><button data-countset="' + escapeHtml(h) + '" title="按实盘库存自动计算用量">盘点</button>') +
+          '<div class="stkOp"><input class="miniInput" id="init-' + encodeURIComponent(h) + '" value="' + (o.init || '') + '" placeholder="期初"><button data-setinit="' + escapeHtml(h) + '">设期初</button></div>' +
+          '<div class="stkOp"><input class="miniInput" id="idate-' + encodeURIComponent(h) + '" value="' + (idt || '') + '" placeholder="截止日" type="date"><button data-setidate="' + escapeHtml(h) + '">设截止</button></div>' +
+          '<div class="stkOp"><input class="miniInput" id="safe-' + encodeURIComponent(h) + '" value="' + (o.safe || '') + '" placeholder="警戒"><button data-setsafe="' + escapeHtml(h) + '">设警戒</button></div>' +
+          (month ? '' : '<div class="stkOp"><input class="miniInput" id="count-' + encodeURIComponent(h) + '" value="" placeholder="实盘数量" title="填现在实际盘到的数量，点盘点自动反推这段时间的用量"><button data-countset="' + escapeHtml(h) + '" title="按实盘库存自动计算用量">盘点</button></div>') +
         '</div>' +
         '</div>';
     }).join('');
