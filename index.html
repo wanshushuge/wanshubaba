@@ -261,6 +261,16 @@ html.rc-dark .tag,html.rc-dark .badge{background:#26303d!important;color:var(--t
 .order-row button{width:34px;height:34px;border-radius:9px;border:1px solid var(--line-soft);background:var(--card-strong);color:var(--text);font-size:15px;cursor:pointer;line-height:1}
 .order-row button:disabled{opacity:.3;cursor:default}
 .mod-card .mcMeta b{color:var(--blue);font-variant-numeric:tabular-nums}
+.mod-card{position:relative}
+.mod-card .mcCtl{position:absolute;top:4px;right:4px;display:flex;gap:2px;opacity:0;transition:opacity .15s;z-index:2}
+.mod-card:hover .mcCtl,.mod-card:focus-within .mcCtl{opacity:1}
+@media(max-width:520px){.mod-card .mcCtl{opacity:1}}
+.mod-card .mcCtl span{cursor:pointer;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:11px;line-height:1;color:var(--sub);background:rgba(0,0,0,.05)}
+html.rc-dark .mod-card .mcCtl span{background:rgba(255,255,255,.14);color:#cfd6e0}
+.mod-card .mcCtl span:hover{background:var(--blue);color:#fff}
+.mod-card.collapsed{padding:9px 6px!important;gap:4px!important;background:var(--blue-soft)}
+.mod-card.collapsed .mcIcon{width:26px;height:26px;font-size:15px;margin-bottom:2px}
+.mod-card.collapsed .mcName{font-size:12.5px}
 
 /* ============================================================
    模块：医院流向
@@ -1575,6 +1585,16 @@ details.fold .fbody{padding:0 16px 16px}
       <div id="meOrderList"></div>
       <div class="actions">
         <button class="btn-ghost btn btn-sm" id="meOrderReset">恢复默认顺序</button>
+      </div>
+    </div>
+  </details>
+  <details class="fold">
+    <summary>🗂 首页折叠 / 隐藏</summary>
+    <div class="fbody">
+      <p class="muted" style="margin-bottom:8px">不常用的工具可「折叠」（首页只留标题）或「隐藏」；隐藏后在下方随时恢复。</p>
+      <div id="meFoldList"></div>
+      <div class="actions">
+        <button class="btn-ghost btn btn-sm" id="meFoldReset">恢复全部显示</button>
       </div>
     </div>
   </details>
@@ -10306,6 +10326,14 @@ document.addEventListener('DOMContentLoaded', () => {
     App.saveOrder(arr); App.renderHome(); App.renderMe();
   };
   App.resetOrder = function () { localStorage.removeItem('rc_tool_order'); App.renderHome(); App.renderMe(); };
+  /* 首页工具折叠 / 隐藏状态（独立定义，任何调用顺序都安全） */
+  App.HOME_FOLD_KEY = 'rc_home_fold';
+  App.getHomeFold = function () { try { const o = JSON.parse(localStorage.getItem(App.HOME_FOLD_KEY) || '{}'); if (o && typeof o === 'object') return o; } catch (e) {} return {}; };
+  App.setHomeFold = function (id, st) { const o = App.getHomeFold(); if (!st || st === 'normal') delete o[id]; else o[id] = st; try { localStorage.setItem(App.HOME_FOLD_KEY, JSON.stringify(o)); } catch (e) {} };
+  App.toggleHomeFold = function (id, e) { if (e) { e.stopPropagation(); e.preventDefault(); } const o = App.getHomeFold(); App.setHomeFold(id, (o[id] === 'collapsed') ? 'normal' : 'collapsed'); if (App.current === 'me') App.renderMe(); else App.renderHome(); };
+  App.hideHomeTool = function (id, e) { if (e) { e.stopPropagation(); e.preventDefault(); } App.setHomeFold(id, 'hidden'); if (App.current === 'me') App.renderMe(); else App.renderHome(); };
+  App.restoreHomeTool = function (id) { App.setHomeFold(id, 'normal'); if (App.current === 'me') App.renderMe(); else App.renderHome(); };
+  App.resetHomeFold = function () { try { localStorage.removeItem(App.HOME_FOLD_KEY); } catch (e) {} if (App.current === 'me') App.renderMe(); else App.renderHome(); };
 
   App.renderHome = function () {
     const t = new Date();
@@ -10324,24 +10352,37 @@ document.addEventListener('DOMContentLoaded', () => {
     /* 备份状态 */
     App.renderBackupStatus();
 
+
     /* 工具宫格 */
     const grid = App.$('homeGrid');
     grid.innerHTML = '';
+    const fold = App.getHomeFold();
+    let shown = 0;
     App.getOrder().forEach(id => {
+      if (fold[id] === 'hidden') return;
       const m = App.mods[id];
+      const collapsed = fold[id] === 'collapsed';
       const card = document.createElement('button');
-      card.className = 'mod-card';
+      card.className = 'mod-card' + (collapsed ? ' collapsed' : '');
       let meta = '';
       try { meta = m.homeMeta ? m.homeMeta() : ''; } catch (e) {}
       card.innerHTML =
         '<div class="mcIcon" style="background:' + m.soft + '">' + m.icon + '</div>' +
         '<div class="mcName">' + m.name + '</div>' +
-        '<div class="mcDesc">' + m.desc + '</div>' +
-        (meta ? '<div class="mcMeta">' + meta + '</div>' : '');
+        (collapsed ? '' :
+          '<div class="mcDesc">' + m.desc + '</div>' +
+          (meta ? '<div class="mcMeta">' + meta + '</div>' : '')) +
+        '<span class="mcCtl" aria-hidden="true">' +
+          '<span class="mcFold" data-fold="' + id + '" title="' + (collapsed ? '展开' : '折叠') + '">' + (collapsed ? '\u25b8' : '\u25be') + '</span>' +
+          '<span class="mcHide" data-hide="' + id + '" title="隐藏此工具">\u2715</span>' +
+        '</span>';
       card.addEventListener('click', () => App.activate(id));
+      card.querySelector('[data-fold]').addEventListener('click', e => App.toggleHomeFold(id, e));
+      card.querySelector('[data-hide]').addEventListener('click', e => App.hideHomeTool(id, e));
       grid.appendChild(card);
+      shown++;
     });
-    App.$('homeModCount').textContent = App.order.length + ' 个 · 点开即用';
+    App.$('homeModCount').textContent = shown + ' / ' + App.order.length + ' 个 · 点开即用';
   };
 
   /* ---------- 备份中心 ---------- */
@@ -10436,6 +10477,31 @@ document.addEventListener('DOMContentLoaded', () => {
         ol.appendChild(row);
       });
     }
+    /* 首页折叠 / 隐藏 */
+    const fl = App.$('meFoldList');
+    if (fl) {
+      fl.innerHTML = '';
+      const fstate = App.getHomeFold();
+      App.order.forEach(id => {
+        const m = App.mods[id];
+        if (!m) return;
+        const st = fstate[id] || 'normal';
+        const stLabel = st === 'collapsed' ? '已折叠' : (st === 'hidden' ? '已隐藏' : '正常');
+        const r2 = document.createElement('div');
+        r2.className = 'order-row';
+        r2.innerHTML = '<span class="order-name">' + m.icon + ' ' + m.name + ' <span class="tag">' + stLabel + '</span></span>' +
+          '<span class="order-btns">' +
+          (st !== 'hidden' ? '<button data-fold2="' + id + '">' + (st === 'collapsed' ? '展开' : '折叠') + '</button>' : '') +
+          (st === 'hidden' ? '<button data-show="' + id + '">显示</button>' : '<button data-hide2="' + id + '">隐藏</button>') +
+          '</span>';
+        fl.appendChild(r2);
+      });
+      fl.querySelectorAll('[data-fold2]').forEach(b => b.addEventListener('click', () => App.toggleHomeFold(b.getAttribute('data-fold2'))));
+      fl.querySelectorAll('[data-hide2]').forEach(b => b.addEventListener('click', () => App.hideHomeTool(b.getAttribute('data-hide2'))));
+      fl.querySelectorAll('[data-show]').forEach(b => b.addEventListener('click', () => App.restoreHomeTool(b.getAttribute('data-show'))));
+    }
+    const fr = App.$('meFoldReset');
+    if (fr) fr.onclick = function () { App.resetHomeFold(); };
     /* 关于：工具清单动态读取，避免写死（排除"备份/我的"两个页面型入口） */
     try {
       const names = App.order
